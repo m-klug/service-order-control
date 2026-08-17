@@ -28,3 +28,6 @@ coverage/
 
 # Supabase local
 supabase/.temp/
+
+# Vite PWA dev output
+dev-dist/

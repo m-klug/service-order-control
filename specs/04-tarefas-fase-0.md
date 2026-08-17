@@ -4,17 +4,17 @@
 >
 > Convenção: código e banco em **inglês** (RNF-07). Cada tarefa tem critério de aceite verificável. Ordem reflete dependências.
 
-## T-00 — Ferramental e repositório
-- [ ] Inicializar repositório git.
-- [ ] Configurar `.gitignore` (node_modules, `.env`, build).
-- [ ] Definir gerenciador de pacotes (pnpm recomendado) e Node LTS.
-- **Aceite**: `git status` limpo com estrutura inicial; segredos fora do versionamento.
+## T-00 — Ferramental e repositório ✅
+- [x] Inicializar repositório git.
+- [x] Configurar `.gitignore` (node_modules, `.env`, build).
+- [x] Definir gerenciador de pacotes (pnpm 11.22.0 via corepack) e Node LTS (`.nvmrc` → 24).
+- **Aceite**: ✅ `git status` limpo com estrutura inicial; segredos fora do versionamento.
 
-## T-01 — Scaffolding do frontend (Vite + React + TS + PWA)
-- [ ] Criar app Vite com template `react-ts`.
-- [ ] Adicionar `vite-plugin-pwa` (manifesto + service worker básico; ainda sem estratégia de offline de dados).
-- [ ] Configurar path aliases (`@/`), ESLint + Prettier.
-- **Aceite**: app roda em dev; build de produção passa; app instalável como PWA (manifesto válido).
+## T-01 — Scaffolding do frontend (Vite + React + TS + PWA) ✅
+- [x] Criar app Vite com template `react-ts` (React 19, Vite 8, TS 6).
+- [x] Adicionar `vite-plugin-pwa` (manifesto + service worker; sem offline de dados ainda).
+- [x] Configurar path alias (`@/`), lint (oxlint, já no template) + Prettier.
+- **Aceite**: ✅ dev responde 200 (`main.tsx`); `pnpm build` passa e gera SW+manifest; ícones PNG 192/512 e manifesto válido (instalável).
 - **Depende de**: T-00.
 
 ## T-02 — UI base (Tailwind + shadcn/ui)

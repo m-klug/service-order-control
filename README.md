@@ -22,9 +22,21 @@ React + Vite + TypeScript (PWA) · Tailwind + shadcn/ui · Supabase (Postgres + 
 
 ## Setup
 
-> Em construção — passos completos serão adicionados conforme a Fase 0 avança (scaffolding, env do Supabase, migrations).
-
 ```bash
 corepack enable pnpm
 pnpm install
+pnpm dev        # servidor de desenvolvimento
 ```
+
+Outros scripts:
+
+```bash
+pnpm build         # type-check + build de produção (gera PWA)
+pnpm preview       # serve o build de produção
+pnpm lint          # oxlint
+pnpm format        # prettier --write
+```
+
+Ícones do PWA são placeholders gerados por `node scripts/gen-placeholder-icons.mjs` — substituir por ícones reais depois.
+
+> Setup do Supabase (env, migrations) será adicionado nas tarefas T-04/T-05.

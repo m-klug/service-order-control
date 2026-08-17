@@ -42,10 +42,11 @@
 - **Depende de**: F1-01, F1-02, F1-03.
 - **Nota**: usei `<select>`/`<textarea>` nativos estilizados (integram com `register`); botão "Nova OS" na página Ordens (lista completa é F1-06). Itens/total entram na F1-05 (create passa `items: []` por ora).
 
-## F1-05 — Itens da OS e total ao vivo (RF-04, RN-03)
-- [ ] Editor de itens: adicionar/editar/remover (descrição, quantidade, preço unitário); `subtotal = qtd × preço`.
-- [ ] Total recalculado ao vivo: `Σ(subtotal) − desconto` (desconto = 0 nesta fase), nunca negativo.
-- **Aceite**: total confere com RN-03 ao adicionar/editar/remover itens; salvar persiste itens e total reflete na releitura.
+## F1-05 — Itens da OS e total ao vivo (RF-04, RN-03) ✅
+- [x] Editor de itens com `useFieldArray`: adicionar/editar/remover (descrição, quantidade, preço unitário).
+- [x] Total ao vivo (`OrderTotal` + `useWatch`): `Σ(qtd × preço) − desconto` (0 nesta fase), nunca negativo, formatado em BRL.
+- [x] Salvar persiste itens via escrita aninhada (F1-03); edição carrega itens existentes.
+- **Aceite**: ✅ verificado — 2 itens (97+95) → total R$ 192,00; remover recalcula para R$ 97,00; salvar persiste (1 item, position 1); reabrir carrega o item e o total.
 - **Depende de**: F1-04.
 
 ## F1-06 — Listagem de OS (RF-09, parcial)

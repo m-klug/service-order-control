@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import {
+  useFieldArray,
+  useForm,
+  useWatch,
+  type Control,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { PlusIcon, Trash2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +30,12 @@ const statusOptions = [
   { value: 'completed', label: 'Concluída' },
 ] as const;
 
+const itemSchema = z.object({
+  description: z.string().trim().min(1, 'Descrição'),
+  quantity: z.number({ message: 'Qtd' }).min(0, '≥ 0'),
+  unit_price: z.number({ message: 'Preço' }).min(0, '≥ 0'),
+});
+
 const schema = z.object({
   number: z.string().trim().min(1, 'Informe o número'),
   client_id: z.string().uuid('Selecione o cliente'),
@@ -31,11 +43,33 @@ const schema = z.object({
   status: z.enum(['open', 'in_progress', 'completed']),
   request: z.string().optional(),
   report: z.string().optional(),
+  items: z.array(itemSchema),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const brl = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+/** Total ao vivo: Σ(qtd × preço) − desconto (0 nesta fase), nunca negativo. */
+function OrderTotal({ control }: { control: Control<FormValues> }) {
+  const items = useWatch({ control, name: 'items' });
+  const total = (items ?? []).reduce((sum, item) => {
+    const quantity = Number(item?.quantity) || 0;
+    const price = Number(item?.unit_price) || 0;
+    return sum + quantity * price;
+  }, 0);
+  return (
+    <div className="flex items-center justify-between border-t pt-3 text-sm font-medium">
+      <span>Total</span>
+      <span>{brl.format(Math.max(0, total))}</span>
+    </div>
+  );
+}
 
 export function OrderEditorPage() {
   const { id } = useParams();
@@ -50,6 +84,7 @@ export function OrderEditorPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     setValue,
@@ -63,8 +98,11 @@ export function OrderEditorPage() {
       status: 'open',
       request: '',
       report: '',
+      items: [],
     },
   });
+
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
   // Preenche o formulário ao carregar a OS (edição).
   useEffect(() => {
@@ -76,6 +114,11 @@ export function OrderEditorPage() {
       status: order.status,
       request: order.request ?? '',
       report: order.report ?? '',
+      items: order.items.map((item) => ({
+        description: item.description,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unit_price),
+      })),
     });
   }, [order, reset]);
 
@@ -96,12 +139,18 @@ export function OrderEditorPage() {
       report: values.report?.trim() || null,
     };
 
+    const items = values.items.map((item) => ({
+      description: item.description.trim(),
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+    }));
+
     try {
       if (id) {
-        await updateOrder.mutateAsync({ id, changes: payload });
+        await updateOrder.mutateAsync({ id, changes: payload, items });
         toast.success('OS atualizada');
       } else {
-        await createOrder.mutateAsync({ input: payload, items: [] });
+        await createOrder.mutateAsync({ input: payload, items });
         toast.success('OS criada');
       }
       navigate('/ordens');
@@ -194,6 +243,83 @@ export function OrderEditorPage() {
             <FormField label="Relatório" htmlFor="report">
               <Textarea id="report" rows={3} {...register('report')} />
             </FormField>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Itens</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                append({ description: '', quantity: 1, unit_price: 0 })
+              }
+            >
+              <PlusIcon />
+              Adicionar item
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {fields.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Nenhum item. Adicione mão de obra, deslocamento, peças, etc.
+              </p>
+            ) : (
+              fields.map((field, index) => (
+                <div key={field.id} className="flex items-start gap-2">
+                  <FormField
+                    className="flex-1"
+                    error={errors.items?.[index]?.description?.message}
+                  >
+                    <Input
+                      placeholder="Descrição"
+                      aria-label="Descrição"
+                      {...register(`items.${index}.description`)}
+                    />
+                  </FormField>
+                  <FormField
+                    className="w-20"
+                    error={errors.items?.[index]?.quantity?.message}
+                  >
+                    <Input
+                      type="number"
+                      step="1"
+                      min="0"
+                      aria-label="Quantidade"
+                      {...register(`items.${index}.quantity`, {
+                        valueAsNumber: true,
+                      })}
+                    />
+                  </FormField>
+                  <FormField
+                    className="w-28"
+                    error={errors.items?.[index]?.unit_price?.message}
+                  >
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      aria-label="Preço unitário"
+                      {...register(`items.${index}.unit_price`, {
+                        valueAsNumber: true,
+                      })}
+                    />
+                  </FormField>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Remover item"
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                </div>
+              ))
+            )}
+            <OrderTotal control={control} />
           </CardContent>
         </Card>
 

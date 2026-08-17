@@ -41,14 +41,51 @@ pnpm format        # prettier --write
 
 ## Supabase
 
+O app fala com a API do Supabase (Auth + PostgREST + RLS). Há dois modos de
+rodar o backend — **o código e as migrations são idênticos nos dois**, então
+dá para começar local e migrar para a nuvem só trocando o `.env`.
+
+### Opção A — Self-hosted local (Docker, sem nuvem)
+
+Requer Docker. Sobe a stack Supabase completa (Postgres, Auth, PostgREST,
+Studio) e aplica as migrations automaticamente:
+
+```bash
+pnpm dlx supabase start      # sobe a stack e aplica as migrations
+pnpm dlx supabase status     # mostra API URL, anon key e Studio URL
+```
+
+Preencha o `.env` com os valores locais (ver `.env.example`):
+
+```
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=<anon key do `supabase status`>
+```
+
+Crie o usuário operador pelo Studio (`http://127.0.0.1:54323` →
+Authentication → Add user) ou pela admin API. Pare a stack com
+`pnpm dlx supabase stop`. Os dados persistem em volumes Docker.
+
+> Para um servidor permanente/endurecido (ex.: em um LXC), o caminho de
+> evolução é o compose oficial de produção (`supabase/docker`) com secrets
+> próprios — mesma API, mesmas migrations.
+
+### Opção B — Nuvem (produção gerenciada)
+
 1. Crie um projeto em [supabase.com](https://supabase.com) (free tier).
 2. Em **Project Settings > API**, copie a **Project URL** e a chave **anon / publishable**.
-3. Configure o `.env` (nunca versionado):
+3. Preencha o `.env`:
 
    ```bash
    cp .env.example .env
-   # preencha VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
+   # VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY do projeto
    ```
+
+4. Crie o usuário operador no dashboard (Authentication → Add user).
+
+**Migrar do local para a nuvem**: troque as duas variáveis do `.env`, faça
+`supabase link` + `db push` (abaixo) e crie o usuário no dashboard. Nada de
+código muda.
 
 O cliente tipado fica em `src/lib/supabase.ts`; a app fala com ele apenas
 pela camada de repositório (T-09). Sem as chaves, funcionalidades que usam

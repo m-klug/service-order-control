@@ -31,11 +31,12 @@
 - **Aceite**: ✅ verificado no browser — mobile (375px) mostra barra inferior, desktop (1280px) mostra sidebar; navegação entre rotas funciona (Ordens ↔ Clientes) com item ativo destacado.
 - **Depende de**: T-02.
 
-## T-04 — Projeto Supabase e conexão 🟡 (código pronto; pende chaves)
-- [ ] Criar projeto no Supabase (free tier). — **ação do usuário**
+## T-04 — Projeto Supabase e conexão ✅ (local) / 🟡 nuvem pendente
+- [x] Stack Supabase LOCAL (self-hosted via `supabase start`, Docker) rodando; conexão verificada.
+- [ ] Criar projeto na NUVEM Supabase (free tier) para produção. — **ação do usuário** (opcional; local já funciona)
 - [x] `.env.example` + cliente Supabase tipado (`src/lib/supabase.ts`), validação de env (`src/lib/env.ts`), typagem (`src/vite-env.d.ts`), placeholder de tipos do banco (`src/lib/database.types.ts`).
 - [x] Documentar setup no `README`.
-- **Aceite**: app conecta ao Supabase; chamada de saúde/sessão retorna sem erro. → **pendente**: exige o projeto criado e o `.env` preenchido; será exercido na T-07 (`getSession` no login).
+- **Aceite**: ✅ app conecta ao Supabase e `getSession` retorna sem erro — verificado contra a stack LOCAL na T-07.
 - **Depende de**: T-01.
 
 ## T-05 — Schema e migrations (modelo de dados) ✅
@@ -56,13 +57,14 @@
 - **Aceite**: ✅ validado no Postgres — insert (usuário A) preencheu os 4 campos; update (usuário B) manteve `created_by`=A, mudou `updated_by`=B e `updated_at` > `created_at`.
 - **Depende de**: T-05.
 
-## T-07 — Autenticação (usuário único)
-- [ ] Habilitar Supabase Auth (e-mail/senha).
-- [ ] Provisionar o usuário operador.
-- [ ] Tela de login/logout; guarda de rotas (redireciona não autenticado).
-- [ ] Persistência de sessão.
-- **Aceite**: sem login não acessa áreas internas; login válido entra; logout encerra sessão.
+## T-07 — Autenticação (usuário único) ✅
+- [x] Supabase Auth e-mail/senha (stack local self-hosted via `supabase start`).
+- [x] Usuário de teste provisionado (`admin@local.test`) via GoTrue admin API. **Substituir pelo usuário real na nuvem.**
+- [x] `AuthProvider`/`useAuth` (`src/lib/auth-context.tsx`), tela de login (`src/pages/login-page.tsx`, react-hook-form + zod), guarda `RequireAuth`, logout no shell.
+- [x] Sessão persistida (localStorage) e `onAuthStateChange`.
+- **Aceite**: ✅ verificado no browser — sem sessão redireciona a `/login`; login válido entra e vai a `/ordens`; sessão persiste; logout volta a `/login`.
 - **Depende de**: T-04, T-03.
+- **Nota**: verificado contra Supabase LOCAL (Docker). Migração à nuvem = trocar URL/anon key no `.env` + criar o usuário real no dashboard.
 
 ## T-08 — Row Level Security (RLS)
 - [ ] Ativar RLS em todas as tabelas.

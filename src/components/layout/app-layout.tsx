@@ -1,8 +1,25 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { LogOutIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
+import { useAuth } from '@/lib/auth-context';
 import { navItems } from './nav';
+
+function LogoutButton() {
+  const { signOut } = useAuth();
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      aria-label="Sair"
+      onClick={() => void signOut()}
+    >
+      <LogOutIcon />
+    </Button>
+  );
+}
 
 /**
  * Shell da aplicação, responsivo por contexto:
@@ -37,15 +54,19 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="pt-2">
+        <div className="flex gap-2 pt-2">
           <ThemeToggle />
+          <LogoutButton />
         </div>
       </aside>
 
       {/* Header — mobile / campo */}
       <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 backdrop-blur md:hidden">
         <p className="text-base font-semibold">Ordens de Serviço</p>
-        <ThemeToggle />
+        <div className="flex gap-2">
+          <ThemeToggle />
+          <LogoutButton />
+        </div>
       </header>
 
       {/* Conteúdo */}

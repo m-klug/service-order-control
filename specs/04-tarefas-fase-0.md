@@ -31,11 +31,11 @@
 - **Aceite**: ✅ verificado no browser — mobile (375px) mostra barra inferior, desktop (1280px) mostra sidebar; navegação entre rotas funciona (Ordens ↔ Clientes) com item ativo destacado.
 - **Depende de**: T-02.
 
-## T-04 — Projeto Supabase e conexão
-- [ ] Criar projeto no Supabase (free tier).
-- [ ] Configurar `.env` com URL e anon key; cliente Supabase tipado.
-- [ ] Documentar setup no `README`.
-- **Aceite**: app conecta ao Supabase; chamada de saúde/sessão retorna sem erro.
+## T-04 — Projeto Supabase e conexão 🟡 (código pronto; pende chaves)
+- [ ] Criar projeto no Supabase (free tier). — **ação do usuário**
+- [x] `.env.example` + cliente Supabase tipado (`src/lib/supabase.ts`), validação de env (`src/lib/env.ts`), typagem (`src/vite-env.d.ts`), placeholder de tipos do banco (`src/lib/database.types.ts`).
+- [x] Documentar setup no `README`.
+- **Aceite**: app conecta ao Supabase; chamada de saúde/sessão retorna sem erro. → **pendente**: exige o projeto criado e o `.env` preenchido; será exercido na T-07 (`getSession` no login).
 - **Depende de**: T-01.
 
 ## T-05 — Schema e migrations (modelo de dados)

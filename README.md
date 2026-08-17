@@ -39,4 +39,19 @@ pnpm format        # prettier --write
 
 Ícones do PWA são placeholders gerados por `node scripts/gen-placeholder-icons.mjs` — substituir por ícones reais depois.
 
-> Setup do Supabase (env, migrations) será adicionado nas tarefas T-04/T-05.
+## Supabase
+
+1. Crie um projeto em [supabase.com](https://supabase.com) (free tier).
+2. Em **Project Settings > API**, copie a **Project URL** e a chave **anon / publishable**.
+3. Configure o `.env` (nunca versionado):
+
+   ```bash
+   cp .env.example .env
+   # preencha VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
+   ```
+
+O cliente tipado fica em `src/lib/supabase.ts`; a app fala com ele apenas
+pela camada de repositório (T-09). Sem as chaves, funcionalidades que usam
+o Supabase lançam um erro claro pedindo para preencher o `.env`.
+
+> Migrations e tipos gerados do banco entram na T-05.

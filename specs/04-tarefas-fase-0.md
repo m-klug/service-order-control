@@ -50,10 +50,10 @@
 - **Aplicar no projeto** (após criar o Supabase e `supabase link`): `pnpm dlx supabase db push`. Regenerar tipos: `pnpm dlx supabase gen types typescript --project-id <id> > src/lib/database.types.ts`.
 - **Nota**: RLS e triggers de auditoria ainda **não** aplicados — T-08 e T-06.
 
-## T-06 — Triggers de auditoria
-- [ ] Trigger/`default` para `created_at`/`updated_at`.
-- [ ] Preencher `created_by` (imutável) e `updated_by` com o usuário autenticado (`auth.uid()`), via trigger ou na camada de aplicação.
-- **Aceite**: inserir e atualizar um registro de teste preenche corretamente os 4 campos; `created_by` não muda em update.
+## T-06 — Triggers de auditoria ✅
+- [x] Migration `20260817000002_audit_triggers.sql`: funções `set_audit_fields_on_insert`/`on_update` + triggers BEFORE em `client` e `service_order`.
+- [x] `created_at`/`updated_at` setados por trigger; `created_by`/`updated_by` de `auth.uid()` no insert; `created_*` imutáveis e `updated_*` atualizados no update.
+- **Aceite**: ✅ validado no Postgres — insert (usuário A) preencheu os 4 campos; update (usuário B) manteve `created_by`=A, mudou `updated_by`=B e `updated_at` > `created_at`.
 - **Depende de**: T-05.
 
 ## T-07 — Autenticação (usuário único)

@@ -54,4 +54,13 @@ O cliente tipado fica em `src/lib/supabase.ts`; a app fala com ele apenas
 pela camada de repositório (T-09). Sem as chaves, funcionalidades que usam
 o Supabase lançam um erro claro pedindo para preencher o `.env`.
 
-> Migrations e tipos gerados do banco entram na T-05.
+### Banco (migrations e tipos)
+
+Schema versionado em `supabase/migrations/`. Depois de criar o projeto e
+vincular (`pnpm dlx supabase link --project-ref <ref>`):
+
+```bash
+pnpm dlx supabase db push   # aplica as migrations no projeto
+# regenerar os tipos após mudanças de schema:
+pnpm dlx supabase gen types typescript --project-id <id> > src/lib/database.types.ts
+```

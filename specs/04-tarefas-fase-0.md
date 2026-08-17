@@ -38,14 +38,17 @@
 - **Aceite**: app conecta ao Supabase; chamada de saúde/sessão retorna sem erro. → **pendente**: exige o projeto criado e o `.env` preenchido; será exercido na T-07 (`getSession` no login).
 - **Depende de**: T-01.
 
-## T-05 — Schema e migrations (modelo de dados)
-- [ ] Criar migration com enum `service_order_status` (`open`, `in_progress`, `completed`).
-- [ ] Tabelas em inglês conforme `03-modelo-dados.md`: `client`, `service_order`, `service_order_item`, `trip`.
-- [ ] Colunas de auditoria em `client` e `service_order`: `created_at`, `updated_at`, `created_by`, `updated_by`.
-- [ ] FKs, unicidade de `service_order.number`, cascades (item/trip), restrição de exclusão de client com OS.
-- [ ] Índices úteis (por `client_id`, `status`, `opened_at`, `paid`).
-- **Aceite**: migration aplica limpa; diagrama/inspeção confirma tabelas, tipos e constraints.
+## T-05 — Schema e migrations (modelo de dados) ✅
+- [x] Migration `supabase/migrations/20260817000001_initial_schema.sql` com enum `service_order_status`.
+- [x] Tabelas em inglês: `client`, `service_order`, `service_order_item`, `trip`.
+- [x] Colunas de auditoria em `client` e `service_order` (`created_at`/`updated_at`/`created_by`/`updated_by`).
+- [x] FKs, `service_order.number` único, cascades (item/trip), `on delete restrict` em client com OS, checks (não-negativos).
+- [x] Índices por `client_id`, `status`, `opened_at`, `paid`, `order_id`.
+- [x] Tipos TS gerados do schema em `src/lib/database.types.ts` (cliente Supabase agora tipado).
+- **Aceite**: ✅ migration aplica limpa em Postgres 16; testes confirmaram defaults (city=Timbó, status=open, paid=false, discount=0, opened_at=hoje), unicidade de `number`, `restrict` (bloqueia excluir client com OS) e cascade (excluir OS remove itens+trips).
 - **Depende de**: T-04.
+- **Aplicar no projeto** (após criar o Supabase e `supabase link`): `pnpm dlx supabase db push`. Regenerar tipos: `pnpm dlx supabase gen types typescript --project-id <id> > src/lib/database.types.ts`.
+- **Nota**: RLS e triggers de auditoria ainda **não** aplicados — T-08 e T-06.
 
 ## T-06 — Triggers de auditoria
 - [ ] Trigger/`default` para `created_at`/`updated_at`.

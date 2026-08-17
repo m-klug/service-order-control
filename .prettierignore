@@ -4,3 +4,4 @@ dev-dist
 pnpm-lock.yaml
 public/icons
 specs
+src/lib/database.types.ts

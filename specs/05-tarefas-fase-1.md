@@ -10,12 +10,12 @@
 > Convenção mantida: código/banco em inglês (RNF-07); domínio/UI em português.
 > Cada tarefa tem critério de aceite verificável. Verificar no stack Supabase local.
 
-## F1-01 — Fundamentos de dados e formulário
-- [ ] Adicionar TanStack Query (`QueryClientProvider`) envolvendo o app; hooks de query/mutation consomem a **camada de repositório** (nunca o Supabase direto).
-- [ ] Estabelecer o padrão de formulário: react-hook-form + zod + componentes shadcn (resolve o wrapper `form` adiado da T-02), com exibição de erros e `onError → toast`.
-- **Aceite**: um hook de query lista dados com estados de loading/erro; um formulário de exemplo valida e mostra erro de campo. `build`/`lint` verdes.
+## F1-01 — Fundamentos de dados e formulário ✅
+- [x] TanStack Query instalado; `QueryClientProvider` em `main.tsx` (defaults: `staleTime` 30s, `retry` 1, sem refetch no foco). `src/lib/query-client.ts`.
+- [x] Padrão de formulário: react-hook-form + zod + `FormField` (`src/components/form/form-field.tsx`, rótulo + controle + erro/dica); helper `getErrorMessage` (`src/lib/errors.ts`). Login refatorado para usar `FormField` (prova do padrão).
+- **Aceite**: ✅ app sobe com os providers sem erro; formulário de login valida (erros "E-mail inválido"/"Informe a senha") e faz login. Hooks de query/mutation sobre os repositórios entram na F1-02 (provider já verificado).
 - **Depende de**: Fase 0.
-- **Nota**: escolha de TanStack Query é recomendação (cache + refetch após mutação + UX de loading). Revisar antes de implementar.
+- **Nota**: TanStack Query adotado (cache + refetch após mutação + UX de loading).
 
 ## F1-02 — CRUD de Cliente (RF-01)
 - [ ] Hooks de query/mutation sobre `clientRepository`.

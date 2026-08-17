@@ -5,7 +5,6 @@ import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -13,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { FormField } from '@/components/form/form-field';
 import { useAuth } from '@/lib/auth-context';
 
 const schema = z.object({
@@ -70,34 +70,30 @@ export function LoginPage() {
             className="space-y-4"
             noValidate
           >
-            <div className="grid gap-2">
-              <Label htmlFor="email">E-mail</Label>
+            <FormField
+              label="E-mail"
+              htmlFor="email"
+              error={errors.email?.message}
+            >
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
                 {...register('email')}
               />
-              {errors.email && (
-                <p className="text-destructive text-sm">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Senha</Label>
+            </FormField>
+            <FormField
+              label="Senha"
+              htmlFor="password"
+              error={errors.password?.message}
+            >
               <Input
                 id="password"
                 type="password"
                 autoComplete="current-password"
                 {...register('password')}
               />
-              {errors.password && (
-                <p className="text-destructive text-sm">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+            </FormField>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Entrando…' : 'Entrar'}
             </Button>

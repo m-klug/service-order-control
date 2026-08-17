@@ -17,13 +17,14 @@
 - **Depende de**: Fase 0.
 - **Nota**: TanStack Query adotado (cache + refetch após mutação + UX de loading).
 
-## F1-02 — CRUD de Cliente (RF-01)
-- [ ] Hooks de query/mutation sobre `clientRepository`.
-- [ ] Página **Clientes**: listagem + busca por nome/telefone.
-- [ ] Criar/editar cliente (campos: nome*, endereço, bairro, referência, cidade [default "Timbó"], telefone, e-mail).
-- [ ] Excluir com confirmação; tratar `on delete restrict` (cliente com OS) com mensagem amigável.
-- **Aceite**: criar, editar, listar, buscar e excluir cliente pela UI; cidade vem "Timbó"; excluir cliente com OS mostra erro claro em vez de quebrar.
+## F1-02 — CRUD de Cliente (RF-01) ✅
+- [x] Hooks de query/mutation sobre `clientRepository` (`src/features/clients/queries.ts`, invalidação em `['clients']`).
+- [x] Página **Clientes**: listagem (TanStack Query) + busca por nome/telefone.
+- [x] Criar/editar via `ClientFormDialog` (nome*, telefone, e-mail, endereço, bairro, cidade [default "Timbó"], referência); form no padrão F1-01.
+- [x] Excluir com `ConfirmDialog`; trata `on delete restrict` (código 23503) com mensagem amigável, mantendo o diálogo aberto.
+- **Aceite**: ✅ verificado no browser — criar (aparece na lista, cidade Timbó), buscar (filtra), editar (persiste; trigger de update roda), excluir (remove + toast), excluir cliente com OS → erro claro sem quebrar.
 - **Depende de**: F1-01.
+- **Extra**: `ConfirmDialog` reutilizável (`src/components/confirm-dialog.tsx`) — trata erro do `onConfirm` sem unhandled rejection.
 
 ## F1-03 — Escrita aninhada da OS no repositório (adiada da T-09)
 - [ ] `ServiceOrderRepository`: criar/atualizar OS com seus **itens** numa operação coerente (substituição de itens no update); leitura com filhos já existe (`getById`).

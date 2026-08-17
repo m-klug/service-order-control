@@ -25,10 +25,10 @@
 - **Depende de**: T-01.
 - **Nota**: o wrapper `form` (react-hook-form) foi **adiado para a Fase 1**, onde os formulários reais são construídos — o estilo `base-nova` usa Base UI e não traz o `form` clássico via CLI. Dependências já instaladas: `react-hook-form`, `zod`, `@hookform/resolvers`.
 
-## T-03 — Layout responsivo (shell mobile + desktop)
-- [ ] Criar shell de aplicação com navegação adaptada por contexto: mobile (campo) x desktop (escritório).
-- [ ] Definir roteamento (React Router) e rotas placeholder das áreas: OS, Clientes, (Financeiro).
-- **Aceite**: em viewport mobile aparece navegação de campo; em desktop, navegação de gestão; rotas navegam.
+## T-03 — Layout responsivo (shell mobile + desktop) ✅
+- [x] Shell `AppLayout` com navegação por contexto: barra inferior no mobile (campo) e sidebar no desktop (escritório); Toaster global.
+- [x] Roteamento (React Router 7, `createBrowserRouter`) com rotas placeholder: `/ordens`, `/clientes`, `/financeiro`, redirect `/` → `/ordens`, 404.
+- **Aceite**: ✅ verificado no browser — mobile (375px) mostra barra inferior, desktop (1280px) mostra sidebar; navegação entre rotas funciona (Ordens ↔ Clientes) com item ativo destacado.
 - **Depende de**: T-02.
 
 ## T-04 — Projeto Supabase e conexão

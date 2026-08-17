@@ -3,12 +3,13 @@ import type {
   ServiceOrder,
   ServiceOrderChanges,
   ServiceOrderItemInput,
+  ServiceOrderListItem,
   ServiceOrderWithChildren,
   NewServiceOrder,
 } from './types';
 
 export interface ServiceOrderRepository {
-  list(): Promise<ServiceOrder[]>;
+  list(): Promise<ServiceOrderListItem[]>;
   getById(id: string): Promise<ServiceOrderWithChildren | null>;
   /** Cria a OS e seus itens. */
   create(
@@ -30,13 +31,29 @@ export interface ServiceOrderRepository {
 }
 
 export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
-  async list(): Promise<ServiceOrder[]> {
+  async list(): Promise<ServiceOrderListItem[]> {
     const { data, error } = await supabase
       .from('service_order')
-      .select('*')
+      .select('*, client(name), service_order_item(quantity, unit_price)')
       .order('opened_at', { ascending: false });
     if (error) throw error;
-    return data;
+
+    return (data ?? []).map((row) => {
+      const { client, service_order_item, ...order } = row;
+      const items = (service_order_item ?? []) as {
+        quantity: number;
+        unit_price: number;
+      }[];
+      const itemsTotal = items.reduce(
+        (sum, item) => sum + Number(item.quantity) * Number(item.unit_price),
+        0,
+      );
+      return {
+        ...(order as ServiceOrder),
+        client_name: (client as unknown as { name: string } | null)?.name ?? '',
+        total: itemsTotal - Number(order.discount),
+      };
+    });
   }
 
   async getById(id: string): Promise<ServiceOrderWithChildren | null> {

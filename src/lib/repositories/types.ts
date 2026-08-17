@@ -38,3 +38,9 @@ export type ServiceOrderWithChildren = ServiceOrder & {
   items: ServiceOrderItem[];
   trips: Trip[];
 };
+
+// Item de listagem: OS + nome do cliente + total calculado.
+export type ServiceOrderListItem = ServiceOrder & {
+  client_name: string;
+  total: number;
+};

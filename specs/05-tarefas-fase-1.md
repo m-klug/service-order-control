@@ -49,11 +49,11 @@
 - **Aceite**: ✅ verificado — 2 itens (97+95) → total R$ 192,00; remover recalcula para R$ 97,00; salvar persiste (1 item, position 1); reabrir carrega o item e o total.
 - **Depende de**: F1-04.
 
-## F1-06 — Listagem de OS (RF-09, parcial)
-- [ ] Página **Ordens**: lista com número, cliente, data de abertura, status e total.
-- [ ] Busca por número/cliente e filtro por status. (Período e pago/não pago ficam para Fase 2/3.)
-- [ ] Abrir uma OS da lista leva ao editor (F1-04/05).
-- **Aceite**: a lista mostra OS reais do banco; busca e filtro por status funcionam; clicar abre a OS.
+## F1-06 — Listagem de OS (RF-09, parcial) ✅
+- [x] `list()` do repositório enriquecido com nome do cliente (embed) e total calculado (`ServiceOrderListItem`).
+- [x] Página **Ordens**: tabela com número, cliente, data (dd/mm/aaaa), status e total (BRL).
+- [x] Busca por número/cliente + filtro por status; clique na linha abre o editor; excluir OS com `ConfirmDialog`.
+- **Aceite**: ✅ verificado — lista mostra 3 OS reais com cliente e total corretos; filtro "Aberta" → só 1708z; busca "1708b" filtra; clique abre editor (`/ordens/:id`); excluir remove a linha.
 - **Depende de**: F1-04, F1-05.
 
 ## F1-07 — Verificação da Fase 1

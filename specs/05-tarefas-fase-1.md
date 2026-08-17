@@ -34,12 +34,13 @@
 - **Depende de**: Fase 0 (T-09).
 - **Nota**: `replaceItems` não é atômico entre delete/insert (aceitável p/ 1 usuário); upgrade futuro = função RPC no banco.
 
-## F1-04 — Criar/editar OS: cabeçalho e numeração (RF-02, RF-03, RF-07)
-- [ ] Selecionar cliente existente (combobox com busca) — criar cliente rápido é opcional/atalho.
-- [ ] Número automático via `suggestNextNumber` (RN-01: DDMM + letra), **editável**; validar unicidade e tratar colisão com mensagem.
-- [ ] Data de abertura (default hoje), status (Aberta/Em andamento/Concluída), solicitação e relatório (texto).
-- **Aceite**: nova OS traz número sugerido editável; dá para trocar status; salvar e reabrir mantém os dados; número duplicado é barrado com aviso.
+## F1-04 — Criar/editar OS: cabeçalho e numeração (RF-02, RF-03, RF-07) ✅
+- [x] Editor `OrderEditorPage` (rotas `/ordens/nova` e `/ordens/:id`); hooks de OS em `src/features/orders/queries.ts`.
+- [x] Seleção de cliente (select nativo com options do `useClients`); número automático via `suggestNextNumber` (RN-01), **editável**; colisão (23505) tratada com aviso.
+- [x] Data de abertura (default hoje), status (Aberta/Em andamento/Concluída), solicitação e relatório (textarea).
+- **Aceite**: ✅ verificado — nova OS traz número sugerido (`1708b`) editável; criar persiste (created_by via trigger); número duplicado → "Já existe uma OS com esse número." e permanece na página; editar carrega e salva (status/relatório, trigger de update).
 - **Depende de**: F1-01, F1-02, F1-03.
+- **Nota**: usei `<select>`/`<textarea>` nativos estilizados (integram com `register`); botão "Nova OS" na página Ordens (lista completa é F1-06). Itens/total entram na F1-05 (create passa `items: []` por ora).
 
 ## F1-05 — Itens da OS e total ao vivo (RF-04, RN-03)
 - [ ] Editor de itens: adicionar/editar/remover (descrição, quantidade, preço unitário); `subtotal = qtd × preço`.

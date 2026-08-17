@@ -17,12 +17,13 @@
 - **Aceite**: ✅ dev responde 200 (`main.tsx`); `pnpm build` passa e gera SW+manifest; ícones PNG 192/512 e manifesto válido (instalável).
 - **Depende de**: T-00.
 
-## T-02 — UI base (Tailwind + shadcn/ui)
-- [ ] Instalar e configurar Tailwind CSS.
-- [ ] Inicializar shadcn/ui; adicionar componentes base (button, input, form, table, dialog, sonner/toast).
-- [ ] Definir tema (cores, tipografia) e suporte a claro/escuro.
-- **Aceite**: uma página de exemplo renderiza componentes shadcn estilizados.
+## T-02 — UI base (Tailwind + shadcn/ui) ✅
+- [x] Instalar e configurar Tailwind CSS (v4, plugin `@tailwindcss/vite`, CSS-first).
+- [x] Inicializar shadcn/ui (estilo `base-nova`, base UI + Base UI primitives); componentes: button, input, label, card, table, dialog, sonner.
+- [x] Tema (cores neutras + fonte Geist) e suporte claro/escuro via `next-themes` (`attribute="class"`).
+- **Aceite**: ✅ página de exemplo em `src/App.tsx` renderiza componentes estilizados; verificado no browser em claro e escuro; toast e dialog funcionam.
 - **Depende de**: T-01.
+- **Nota**: o wrapper `form` (react-hook-form) foi **adiado para a Fase 1**, onde os formulários reais são construídos — o estilo `base-nova` usa Base UI e não traz o `form` clássico via CLI. Dependências já instaladas: `react-hook-form`, `zod`, `@hookform/resolvers`.
 
 ## T-03 — Layout responsivo (shell mobile + desktop)
 - [ ] Criar shell de aplicação com navegação adaptada por contexto: mobile (campo) x desktop (escritório).

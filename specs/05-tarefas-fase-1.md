@@ -26,12 +26,13 @@
 - **Depende de**: F1-01.
 - **Extra**: `ConfirmDialog` reutilizável (`src/components/confirm-dialog.tsx`) — trata erro do `onConfirm` sem unhandled rejection.
 
-## F1-03 — Escrita aninhada da OS no repositório (adiada da T-09)
-- [ ] `ServiceOrderRepository`: criar/atualizar OS com seus **itens** numa operação coerente (substituição de itens no update); leitura com filhos já existe (`getById`).
-- [ ] Tipos de entrada para item (`NewServiceOrderItem`), `position` sequencial.
-- [ ] (Trips ficam para a Fase 2 — manter interface preparada, sem UI.)
-- **Aceite**: criar OS com N itens e reler retorna os itens na ordem correta; atualizar itens substitui o conjunto corretamente. Verificado (smoke/teste).
+## F1-03 — Escrita aninhada da OS no repositório (adiada da T-09) ✅
+- [x] `ServiceOrderRepository.create(input, items)` e `update(id, changes, items?)` — `replaceItems` remove e reinsere com `position` sequencial (`items?` undefined mantém os itens).
+- [x] Tipo `ServiceOrderItemInput`; `getById` já lê filhos ordenados por `position`.
+- [x] Trips: interface preparada, sem UI (Fase 2).
+- **Aceite**: ✅ smoke no browser — criar OS `1708a` com 2 itens (positions [1,2], total 192) e reler retorna ordenado; atualizar com 1 item substitui o conjunto (positions [1]).
 - **Depende de**: Fase 0 (T-09).
+- **Nota**: `replaceItems` não é atômico entre delete/insert (aceitável p/ 1 usuário); upgrade futuro = função RPC no banco.
 
 ## F1-04 — Criar/editar OS: cabeçalho e numeração (RF-02, RF-03, RF-07)
 - [ ] Selecionar cliente existente (combobox com busca) — criar cliente rápido é opcional/atalho.

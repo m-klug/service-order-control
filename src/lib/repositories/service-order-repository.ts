@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import type {
   ServiceOrder,
   ServiceOrderChanges,
+  ServiceOrderItemInput,
   ServiceOrderWithChildren,
   NewServiceOrder,
 } from './types';
@@ -9,8 +10,20 @@ import type {
 export interface ServiceOrderRepository {
   list(): Promise<ServiceOrder[]>;
   getById(id: string): Promise<ServiceOrderWithChildren | null>;
-  create(input: NewServiceOrder): Promise<ServiceOrder>;
-  update(id: string, changes: ServiceOrderChanges): Promise<ServiceOrder>;
+  /** Cria a OS e seus itens. */
+  create(
+    input: NewServiceOrder,
+    items: ServiceOrderItemInput[],
+  ): Promise<ServiceOrder>;
+  /**
+   * Atualiza a OS. Se `items` for informado, substitui o conjunto de itens;
+   * `undefined` mantém os itens atuais.
+   */
+  update(
+    id: string,
+    changes: ServiceOrderChanges,
+    items?: ServiceOrderItemInput[],
+  ): Promise<ServiceOrder>;
   remove(id: string): Promise<void>;
   /** Sugere o próximo número no padrão DDMM + letra (RN-01). */
   suggestNextNumber(date?: Date): Promise<string>;
@@ -49,19 +62,24 @@ export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
     return { ...order, items: items.data, trips: trips.data };
   }
 
-  async create(input: NewServiceOrder): Promise<ServiceOrder> {
+  async create(
+    input: NewServiceOrder,
+    items: ServiceOrderItemInput[],
+  ): Promise<ServiceOrder> {
     const { data, error } = await supabase
       .from('service_order')
       .insert(input)
       .select('*')
       .single();
     if (error) throw error;
+    await this.replaceItems(data.id, items);
     return data;
   }
 
   async update(
     id: string,
     changes: ServiceOrderChanges,
+    items?: ServiceOrderItemInput[],
   ): Promise<ServiceOrder> {
     const { data, error } = await supabase
       .from('service_order')
@@ -70,7 +88,38 @@ export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
       .select('*')
       .single();
     if (error) throw error;
+    if (items !== undefined) await this.replaceItems(id, items);
     return data;
+  }
+
+  /**
+   * Substitui todos os itens da OS pelos informados (remove e reinsere com
+   * `position` sequencial). Nota: não é atômico entre remoção e inserção —
+   * aceitável nesta escala (1 usuário). Upgrade futuro: função RPC no banco.
+   */
+  private async replaceItems(
+    orderId: string,
+    items: ServiceOrderItemInput[],
+  ): Promise<void> {
+    const { error: deleteError } = await supabase
+      .from('service_order_item')
+      .delete()
+      .eq('order_id', orderId);
+    if (deleteError) throw deleteError;
+
+    if (items.length === 0) return;
+
+    const rows = items.map((item, index) => ({
+      order_id: orderId,
+      position: index + 1,
+      description: item.description,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+    }));
+    const { error: insertError } = await supabase
+      .from('service_order_item')
+      .insert(rows);
+    if (insertError) throw insertError;
   }
 
   async remove(id: string): Promise<void> {

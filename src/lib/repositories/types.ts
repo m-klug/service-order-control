@@ -26,6 +26,13 @@ export type ServiceOrderChanges = Partial<
   Writable<Tables['service_order']['Update']>
 >;
 
+/** Item informado pela UI; o repositório atribui `order_id` e `position`. */
+export type ServiceOrderItemInput = {
+  description: string;
+  quantity: number;
+  unit_price: number;
+};
+
 // OS com filhos (leitura detalhada).
 export type ServiceOrderWithChildren = ServiceOrder & {
   items: ServiceOrderItem[];

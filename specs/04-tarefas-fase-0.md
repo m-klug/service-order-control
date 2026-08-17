@@ -49,7 +49,7 @@
 - **Aceite**: ✅ migration aplica limpa em Postgres 16; testes confirmaram defaults (city=Timbó, status=open, paid=false, discount=0, opened_at=hoje), unicidade de `number`, `restrict` (bloqueia excluir client com OS) e cascade (excluir OS remove itens+trips).
 - **Depende de**: T-04.
 - **Aplicar no projeto** (após criar o Supabase e `supabase link`): `pnpm dlx supabase db push`. Regenerar tipos: `pnpm dlx supabase gen types typescript --project-id <id> > src/lib/database.types.ts`.
-- **Nota**: RLS e triggers de auditoria ainda **não** aplicados — T-08 e T-06.
+- **Nota**: `created_by`/`updated_by` recebem `default auth.uid()` (auditoria via default no insert + trigger no update, T-06); RLS na T-08.
 
 ## T-06 — Triggers de auditoria ✅
 - [x] Migration `20260817000002_audit_triggers.sql`: funções `set_audit_fields_on_insert`/`on_update` + triggers BEFORE em `client` e `service_order`.
@@ -66,24 +66,25 @@
 - **Depende de**: T-04, T-03.
 - **Nota**: verificado contra Supabase LOCAL (Docker). Migração à nuvem = trocar URL/anon key no `.env` + criar o usuário real no dashboard.
 
-## T-08 — Row Level Security (RLS)
-- [ ] Ativar RLS em todas as tabelas.
-- [ ] Políticas: apenas usuários autenticados leem/escrevem (modelo de usuário único; preparado para multiusuário futuro).
-- **Aceite**: requisição sem sessão é negada; com sessão é permitida. Verificado em teste manual.
+## T-08 — Row Level Security (RLS) ✅
+- [x] Migration `20260817000003_rls.sql`: RLS ativo nas 4 tabelas + policies `for all to authenticated`; grants de tabela ao role `authenticated` (anon omitido = negado).
+- **Aceite**: ✅ verificado via PostgREST — anon SELECT/INSERT → 401; authenticated INSERT → sucesso (`created_by` auto), SELECT → retorna linha.
 - **Depende de**: T-05, T-07.
 
-## T-09 — Camada de repositório (RNF-03)
-- [ ] Definir interfaces: `ClientRepository`, `ServiceOrderRepository` (com itens e trips), agnósticas de backend.
-- [ ] Tipos de domínio (TypeScript) espelhando o modelo.
-- [ ] Implementação Supabase das interfaces.
-- [ ] Ponto único de injeção (a UI depende da interface, nunca do Supabase direto).
-- **Aceite**: um smoke test cria e lê um `client` pela interface, sem a UI conhecer o Supabase.
+## T-09 — Camada de repositório (RNF-03) ✅
+- [x] Interfaces `ClientRepository` e `ServiceOrderRepository` (CRUD + leitura de OS com itens/trips + `suggestNextNumber` RN-01), em `src/lib/repositories/`.
+- [x] Tipos de domínio derivados do schema (`types.ts`).
+- [x] Implementações Supabase (`SupabaseClientRepository`, `SupabaseServiceOrderRepository`).
+- [x] Ponto único de injeção (`index.ts`) — UI depende da interface, nunca do Supabase direto.
+- **Aceite**: ✅ smoke test no browser (autenticado) criou e leu um `client` pela interface, com `created_by` preenchido, sem tocar o Supabase direto; `suggestNextNumber()` retornou `1708a` (RN-01).
 - **Depende de**: T-05, T-06.
+- **Nota**: escrita aninhada de itens/trips na OS fica pra Fase 1 (junto do editor de OS).
 
-## T-10 — Verificação da fundação (fim da fase)
-- [ ] Fluxo ponta a ponta manual: login → criar `client` via repositório → registro aparece com auditoria preenchida → logout bloqueia acesso.
-- [ ] `README` com passos de setup (env, migrations, rodar dev).
-- **Aceite**: todos os aceites acima verdes; fundação pronta para Fase 1.
+## T-10 — Verificação da fundação (fim da fase) ✅ (local)
+- [x] Fluxo ponta a ponta verificado no stack local: login → criar `client` via repositório → registro com auditoria (`created_by`) → RLS bloqueia anon → logout redireciona a `/login`.
+- [x] `README` com setup (self-hosted local + nuvem, migrations, rodar dev).
+- **Aceite**: ✅ verde no Supabase LOCAL. Fundação pronta para a Fase 1.
+- **Pendente (nuvem)**: repetir a verificação contra o projeto Supabase da nuvem quando criado (troca de `.env` + `db push` + usuário real).
 - **Depende de**: T-01..T-09.
 
 ## Definição de Pronto da Fase 0

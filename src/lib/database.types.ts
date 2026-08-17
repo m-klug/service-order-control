@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       client: {
@@ -28,7 +53,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string
           district?: string | null
           email?: string | null
           id?: string
@@ -36,7 +61,7 @@ export type Database = {
           phone?: string | null
           reference?: string | null
           updated_at?: string
-          updated_by: string
+          updated_by?: string
         }
         Update: {
           address?: string | null
@@ -77,7 +102,7 @@ export type Database = {
           amount_paid?: number | null
           client_id: string
           created_at?: string
-          created_by: string
+          created_by?: string
           discount?: number
           id?: string
           number: string
@@ -88,7 +113,7 @@ export type Database = {
           settled_at?: string | null
           status?: Database["public"]["Enums"]["service_order_status"]
           updated_at?: string
-          updated_by: string
+          updated_by?: string
           warranty_months?: number | null
         }
         Update: {
@@ -341,6 +366,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       service_order_status: ["open", "in_progress", "completed"],

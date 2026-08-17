@@ -19,8 +19,8 @@ create table client (
   email text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  created_by uuid not null references auth.users (id),
-  updated_by uuid not null references auth.users (id)
+  created_by uuid not null default auth.uid() references auth.users (id),
+  updated_by uuid not null default auth.uid() references auth.users (id)
 );
 
 -- Service orders. `number` follows DDMM + letter (RN-01) and is unique.
@@ -40,8 +40,8 @@ create table service_order (
   settled_at date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  created_by uuid not null references auth.users (id),
-  updated_by uuid not null references auth.users (id)
+  created_by uuid not null default auth.uid() references auth.users (id),
+  updated_by uuid not null default auth.uid() references auth.users (id)
 );
 
 -- Line items. Free text in the MVP; catalog is future scope.

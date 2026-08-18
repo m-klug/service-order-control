@@ -45,17 +45,20 @@
 - **Depende de**: F2-01, F2-02.
 - **Decisão**: mantida a tabela (com scroll horizontal, padrão já aceito desde F1-06/F2-03) em vez de um layout de cartões dedicado para mobile — evita duplicar layout (RNF-05); o `select` de status é utilizável mesmo com a rolagem.
 
-## F2-06 — Verificação da Fase 2
-- [ ] Fluxo ponta a ponta no stack local: atender OS em campo (mobile) — mudar status, registrar 1 deslocamento, preencher relatório; no escritório (desktop) — aplicar desconto, marcar como paga, conferir na página Financeiro.
-- [ ] Conferir os filtros de período e pago/não pago na listagem.
-- **Aceite**: fluxo completo verde; nada de acesso ao Supabase fora da camada de repositório.
+## F2-06 — Verificação da Fase 2 ✅
+- [x] Banco resetado limpo (`supabase db reset` + usuário recriado); fluxo ponta a ponta refeito do zero: **campo (375px)** — criar cliente/OS, mudar status pela ação rápida na lista, registrar deslocamento parcial (só data+carro), preencher relatório; **escritório (1280px)** — item, desconto 20 (total ao vivo 100→80), marcar paga com valor 80, data de quitação, garantia 3 meses.
+- [x] Filtros de período (isola OS de 18/08, exclui a de 10/07) e "a receber" (exclui a paga) verificados na listagem.
+- [x] Financeiro conferido: situação e total a receber (R$ 0,00) corretos para o conjunto de dados.
+- **Aceite**: ✅ fluxo completo verde; PostgREST confirmou tudo persistido (`status`, `report`, `paid`/`amount_paid`/`settled_at`/`discount`/`warranty_months`, `trip` com campos vazios como `null`, não `0`); toda leitura/escrita passou pela camada de repositório.
 - **Depende de**: F2-01..F2-05.
 
-## Definição de Pronto da Fase 2
-- Deslocamentos: registráveis, dinâmicos, todos os campos opcionais.
-- Pagamento: pago/valor pago/data de quitação; desconto e garantia editáveis; total correto com desconto.
-- Listagem de OS: filtros completos (status, cliente, período, pago/não pago).
-- Página Financeiro: lista simples pago x a receber.
-- Fluxo mobile de campo: mudança de status rápida, formulário utilizável em tela pequena.
-- Tudo pela camada de repositório; verificado no stack local; `build`/`lint`/`prettier` verdes.
-- **Critérios de aceite do MVP fechados nesta fase**: 2 (completo, com deslocamento/garantia/desconto), 4 (marcar pago + valor), 5 (completo, com período e pagamento), 6 segue pendente (PDF — Fase 3).
+**FASE 2 CONCLUÍDA.**
+
+## Definição de Pronto da Fase 2 ✅
+- [x] Deslocamentos: registráveis, dinâmicos, todos os campos opcionais.
+- [x] Pagamento: pago/valor pago/data de quitação; desconto e garantia editáveis; total correto com desconto.
+- [x] Listagem de OS: filtros completos (status, cliente, período, pago/não pago).
+- [x] Página Financeiro: lista simples pago x a receber.
+- [x] Fluxo mobile de campo: mudança de status rápida, formulário utilizável em tela pequena.
+- [x] Tudo pela camada de repositório; verificado no stack local; `build`/`lint`/`prettier` verdes.
+- **Critérios de aceite do MVP fechados nesta fase**: 2 (completo, com deslocamento/garantia/desconto), 4 (marcar pago + valor), 5 (completo, com período e pagamento). Resta o #6 (PDF) para a Fase 3.

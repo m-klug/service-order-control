@@ -111,7 +111,7 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 
 ---
 
-## Etapa 6 — F2-06: Verificação da Fase 2
+## Etapa 6 — F2-06: Verificação da Fase 2 ✅ concluída
 
 **Depende de**: Etapas 1–5.
 
@@ -123,6 +123,8 @@ Fluxo ponta a ponta no stack local, partindo de banco limpo (`supabase db reset`
 5. Confirmar via PostgREST que `trip`, `paid`/`amount_paid`/`settled_at`, `discount` e `warranty_months` estão persistidos como esperado.
 
 **Aceite**: fluxo completo verde; nenhum acesso ao Supabase fora da camada de repositório.
+
+**Verificado ✅** no stack local partindo de banco limpo — fluxo campo→escritório→filtros→financeiro completo, confirmado via PostgREST. **FASE 2 CONCLUÍDA.**
 
 ---
 

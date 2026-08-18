@@ -94,7 +94,7 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 
 ---
 
-## Etapa 5 — F2-05: Fluxo mobile de campo (RNF-02)
+## Etapa 5 — F2-05: Fluxo mobile de campo (RNF-02) ✅ concluída
 
 **Objetivo**: tornar o uso em campo rápido, sem abrir o formulário inteiro.
 
@@ -106,6 +106,8 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 - Ponto conhecido de polish: na linha de itens, o campo "Descrição" fica estreito em 375px.
 
 **Aceite**: no mobile dá para abrir a lista, mudar o status de uma OS e voltar em poucos toques, sem passar pelo formulário; deslocamento e relatório preenchíveis confortavelmente em 375px.
+
+**Verificado ✅** no stack local — select de status inline não navega e preserva filhos (sem `children` na mutation); editor reordenado (Deslocamentos logo após Cabeçalho); item da OS corrigido para empilhar em 375px. Optei por manter a tabela com scroll horizontal em vez de um layout de cartões dedicado — evita duplicar layout, consistente com RNF-05.
 
 ---
 

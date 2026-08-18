@@ -37,12 +37,13 @@
 - **Aceite**: ✅ verificado no stack local — total a receber R$ 250,00 bate com a soma manual (200+50+0+0+0 das não pagas); filtro de período recalcula o total corretamente; situação e valor pago corretos por linha; clique na linha abre o editor; usável em 375px.
 - **Depende de**: F2-02.
 
-## F2-05 — Fluxo mobile de campo (RNF-02, contexto "campo" da spec)
-- [ ] Ação rápida na lista de OS (mobile): mudar status sem abrir o editor completo (ex.: menu/botões inline para Aberta → Em andamento → Concluída).
-- [ ] Revisar o editor de OS em mobile com foco no uso em campo: ordem dos campos prioriza o que o técnico preenche no local (status, relatório, deslocamento do dia), sem exigir rolagem excessiva para ações comuns.
-- [ ] Conferir usabilidade dos cartões de deslocamento (F2-01) em tela pequena — inputs numéricos e de hora com tamanho de toque adequado.
-- **Aceite**: no mobile, dá para abrir a lista, mudar o status de uma OS e voltar em poucos toques, sem passar pelo formulário inteiro; deslocamento e relatório são preenchíveis confortavelmente em 375px.
+## F2-05 — Fluxo mobile de campo (RNF-02, contexto "campo" da spec) ✅
+- [x] Ação rápida na listagem: `<select>` inline de status por linha (`stopPropagation` evita abrir o editor); `useUpdateServiceOrder` chamado sem `children`, preservando itens/deslocamentos (semântica da F2-01).
+- [x] Editor de OS reordenado: Cabeçalho → **Deslocamentos** → Itens → Pagamento (deslocamento acessível logo após o cabeçalho, sem rolar pelos blocos de itens/pagamento).
+- [x] Corrigido o ponto de polish conhecido: linha de item agora empilha em mobile (`flex-col`/`sm:flex-row`) — Descrição em largura total, quantidade/preço/remover numa linha abaixo, em vez de espremidos.
+- **Aceite**: ✅ verificado no stack local — mudar status pela listagem não navega (permanece em `/ordens`), persiste, preserva deslocamentos existentes; editor mostra Deslocamentos como 2º bloco; item empilha corretamente em 375px; cartões de deslocamento já verificados usáveis na F2-01.
 - **Depende de**: F2-01, F2-02.
+- **Decisão**: mantida a tabela (com scroll horizontal, padrão já aceito desde F1-06/F2-03) em vez de um layout de cartões dedicado para mobile — evita duplicar layout (RNF-05); o `select` de status é utilizável mesmo com a rolagem.
 
 ## F2-06 — Verificação da Fase 2
 - [ ] Fluxo ponta a ponta no stack local: atender OS em campo (mobile) — mudar status, registrar 1 deslocamento, preencher relatório; no escritório (desktop) — aplicar desconto, marcar como paga, conferir na página Financeiro.

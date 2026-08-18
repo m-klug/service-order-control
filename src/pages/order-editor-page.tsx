@@ -415,146 +415,6 @@ export function OrderEditorPage() {
 
         <Card>
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Itens</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                append({ description: '', quantity: 1, unit_price: 0 })
-              }
-            >
-              <PlusIcon />
-              Adicionar item
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {fields.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Nenhum item. Adicione mão de obra, deslocamento, peças, etc.
-              </p>
-            ) : (
-              fields.map((field, index) => (
-                <div key={field.id} className="flex items-start gap-2">
-                  <FormField
-                    className="flex-1"
-                    error={errors.items?.[index]?.description?.message}
-                  >
-                    <Input
-                      placeholder="Descrição"
-                      aria-label="Descrição"
-                      {...register(`items.${index}.description`)}
-                    />
-                  </FormField>
-                  <FormField
-                    className="w-20"
-                    error={errors.items?.[index]?.quantity?.message}
-                  >
-                    <Input
-                      type="number"
-                      step="1"
-                      min="0"
-                      aria-label="Quantidade"
-                      {...register(`items.${index}.quantity`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </FormField>
-                  <FormField
-                    className="w-28"
-                    error={errors.items?.[index]?.unit_price?.message}
-                  >
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      aria-label="Preço unitário"
-                      {...register(`items.${index}.unit_price`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </FormField>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remover item"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              ))
-            )}
-            <OrderTotal control={control} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Pagamento</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2">
-              <input
-                id="paid"
-                type="checkbox"
-                className="border-input accent-foreground h-4 w-4 rounded"
-                {...register('paid')}
-              />
-              <Label htmlFor="paid">Pago</Label>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                label="Valor pago"
-                htmlFor="amount_paid"
-                error={errors.amount_paid?.message}
-              >
-                <Input
-                  id="amount_paid"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('amount_paid', { setValueAs: numberOrNull })}
-                />
-              </FormField>
-              <FormField label="Data de quitação" htmlFor="settled_at">
-                <Input
-                  id="settled_at"
-                  type="date"
-                  {...register('settled_at')}
-                />
-              </FormField>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                label="Desconto"
-                htmlFor="discount"
-                error={errors.discount?.message}
-              >
-                <Input
-                  id="discount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('discount', { setValueAs: numberOrZero })}
-                />
-              </FormField>
-              <FormField label="Garantia (meses)" htmlFor="warranty_months">
-                <Input
-                  id="warranty_months"
-                  type="number"
-                  step="1"
-                  min="0"
-                  {...register('warranty_months', { setValueAs: numberOrNull })}
-                />
-              </FormField>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Deslocamentos</CardTitle>
             <Button
               type="button"
@@ -685,6 +545,151 @@ export function OrderEditorPage() {
                 </details>
               ))
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Itens</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                append({ description: '', quantity: 1, unit_price: 0 })
+              }
+            >
+              <PlusIcon />
+              Adicionar item
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {fields.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Nenhum item. Adicione mão de obra, deslocamento, peças, etc.
+              </p>
+            ) : (
+              fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="flex flex-col gap-2 border-b pb-3 last:border-b-0 last:pb-0 sm:flex-row sm:items-start sm:border-0 sm:pb-0"
+                >
+                  <FormField
+                    className="w-full sm:flex-1"
+                    error={errors.items?.[index]?.description?.message}
+                  >
+                    <Input
+                      placeholder="Descrição"
+                      aria-label="Descrição"
+                      {...register(`items.${index}.description`)}
+                    />
+                  </FormField>
+                  <div className="flex items-start gap-2">
+                    <FormField
+                      className="w-20"
+                      error={errors.items?.[index]?.quantity?.message}
+                    >
+                      <Input
+                        type="number"
+                        step="1"
+                        min="0"
+                        aria-label="Quantidade"
+                        {...register(`items.${index}.quantity`, {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </FormField>
+                    <FormField
+                      className="w-28"
+                      error={errors.items?.[index]?.unit_price?.message}
+                    >
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        aria-label="Preço unitário"
+                        {...register(`items.${index}.unit_price`, {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </FormField>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remover item"
+                      onClick={() => remove(index)}
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+            <OrderTotal control={control} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pagamento</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                id="paid"
+                type="checkbox"
+                className="border-input accent-foreground h-4 w-4 rounded"
+                {...register('paid')}
+              />
+              <Label htmlFor="paid">Pago</Label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="Valor pago"
+                htmlFor="amount_paid"
+                error={errors.amount_paid?.message}
+              >
+                <Input
+                  id="amount_paid"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register('amount_paid', { setValueAs: numberOrNull })}
+                />
+              </FormField>
+              <FormField label="Data de quitação" htmlFor="settled_at">
+                <Input
+                  id="settled_at"
+                  type="date"
+                  {...register('settled_at')}
+                />
+              </FormField>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="Desconto"
+                htmlFor="discount"
+                error={errors.discount?.message}
+              >
+                <Input
+                  id="discount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register('discount', { setValueAs: numberOrZero })}
+                />
+              </FormField>
+              <FormField label="Garantia (meses)" htmlFor="warranty_months">
+                <Input
+                  id="warranty_months"
+                  type="number"
+                  step="1"
+                  min="0"
+                  {...register('warranty_months', { setValueAs: numberOrNull })}
+                />
+              </FormField>
+            </div>
           </CardContent>
         </Card>
 

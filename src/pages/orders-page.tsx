@@ -14,23 +14,25 @@ import {
 } from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { getErrorMessage } from '@/lib/errors';
-import type { ServiceOrderListItem } from '@/lib/repositories';
+import type {
+  ServiceOrderListItem,
+  ServiceOrderStatus,
+} from '@/lib/repositories';
 import {
   useDeleteServiceOrder,
   useServiceOrders,
+  useUpdateServiceOrder,
 } from '@/features/orders/queries';
 
-const statusLabels: Record<string, string> = {
-  open: 'Aberta',
-  in_progress: 'Em andamento',
-  completed: 'Concluída',
-};
-
-const statusFilters = [
-  { value: 'all', label: 'Todos os status' },
+const statusOptions: { value: ServiceOrderStatus; label: string }[] = [
   { value: 'open', label: 'Aberta' },
   { value: 'in_progress', label: 'Em andamento' },
   { value: 'completed', label: 'Concluída' },
+];
+
+const statusFilters = [
+  { value: 'all', label: 'Todos os status' },
+  ...statusOptions,
 ];
 
 const paidFilters = [
@@ -52,6 +54,7 @@ function formatDate(iso: string): string {
 export function OrdersPage() {
   const { data: orders, isLoading, isError, error } = useServiceOrders();
   const deleteOrder = useDeleteServiceOrder();
+  const updateOrder = useUpdateServiceOrder();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
@@ -86,6 +89,19 @@ export function OrdersPage() {
       );
     });
   }, [orders, search, status, paidFilter, dateFrom, dateTo]);
+
+  // Ação rápida de campo: muda o status sem abrir o editor. Sem `children`,
+  // a mutation preserva itens/deslocamentos existentes (semântica da F2-01).
+  async function handleStatusChange(orderId: string, next: ServiceOrderStatus) {
+    try {
+      await updateOrder.mutateAsync({ id: orderId, changes: { status: next } });
+      toast.success('Status atualizado');
+    } catch (err) {
+      toast.error('Não foi possível atualizar o status', {
+        description: getErrorMessage(err),
+      });
+    }
+  }
 
   async function confirmDelete() {
     if (!deleting) return;
@@ -196,7 +212,25 @@ export function OrdersPage() {
                   <TableCell className="font-medium">{order.number}</TableCell>
                   <TableCell>{order.client_name || '—'}</TableCell>
                   <TableCell>{formatDate(order.opened_at)}</TableCell>
-                  <TableCell>{statusLabels[order.status]}</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <select
+                      aria-label={`Status da OS ${order.number}`}
+                      className="border-input bg-transparent dark:bg-input/30 h-8 rounded-lg border px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3"
+                      value={order.status}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          order.id,
+                          e.target.value as ServiceOrderStatus,
+                        )
+                      }
+                    >
+                      {statusOptions.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </TableCell>
                   <TableCell className="text-right">
                     {brl.format(order.total)}
                   </TableCell>

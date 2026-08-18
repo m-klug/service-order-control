@@ -24,10 +24,10 @@
 - **Depende de**: Fase 1.
 - **Reuso da correção da F2-01**: `numberOrNull` (agora trata `null`/`undefined`, não só `''`) usado em `amount_paid`/`warranty_months`; `numberOrZero` (mesma lógica, padrão 0) para `discount`, que é `not null default 0` no banco.
 
-## F2-03 — Filtros completos na listagem de OS (RF-09)
-- [ ] Adicionar à página Ordens (F1-06) os filtros que faltaram: **período** (data inicial/final sobre `opened_at`) e **pago/não pago**.
-- [ ] Combinar com busca e filtro de status já existentes (E lógico entre todos os filtros ativos).
-- **Aceite**: filtrar por período retorna só OS no intervalo; filtrar por "não pago" retorna só `paid = false`; filtros combinam corretamente com busca/status.
+## F2-03 — Filtros completos na listagem de OS (RF-09) ✅
+- [x] Página Ordens: filtros de **período** (data inicial/final sobre `opened_at`, comparação de string `YYYY-MM-DD`) e **pagamento** (todos/pago/a receber).
+- [x] Combinados com busca e status no mesmo `useMemo` (E lógico); `hasActiveFilters` diferencia "nenhuma OS cadastrada" de "nenhuma encontrada".
+- **Aceite**: ✅ verificado no stack local — período 18/08–18/08 mantém as 6 OS do dia e exclui uma de 01/08; período 01/08–01/08 isola só essa; "A receber" exclui as 2 pagas; "Pago" retorna exatamente as 2 pagas; busca "1808" + Pago retorna só a interseção correta (E lógico).
 - **Depende de**: F2-02 (campo `paid` editável na UI).
 
 ## F2-04 — Página Financeiro (RNF do plano técnico: visão financeira simples)

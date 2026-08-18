@@ -33,6 +33,12 @@ const statusFilters = [
   { value: 'completed', label: 'Concluída' },
 ];
 
+const paidFilters = [
+  { value: 'all', label: 'Pagamento: todos' },
+  { value: 'paid', label: 'Pago' },
+  { value: 'unpaid', label: 'A receber' },
+];
+
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
@@ -50,7 +56,17 @@ export function OrdersPage() {
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+  const [paidFilter, setPaidFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [deleting, setDeleting] = useState<ServiceOrderListItem | null>(null);
+
+  const hasActiveFilters =
+    Boolean(search) ||
+    status !== 'all' ||
+    paidFilter !== 'all' ||
+    Boolean(dateFrom) ||
+    Boolean(dateTo);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -60,9 +76,16 @@ export function OrdersPage() {
         o.number.toLowerCase().includes(term) ||
         o.client_name.toLowerCase().includes(term);
       const matchesStatus = status === 'all' || o.status === status;
-      return matchesTerm && matchesStatus;
+      const matchesPaid =
+        paidFilter === 'all' || (paidFilter === 'paid' ? o.paid : !o.paid);
+      // opened_at é `date` (YYYY-MM-DD); comparação de string basta, sem Date().
+      const matchesFrom = !dateFrom || o.opened_at >= dateFrom;
+      const matchesTo = !dateTo || o.opened_at <= dateTo;
+      return (
+        matchesTerm && matchesStatus && matchesPaid && matchesFrom && matchesTo
+      );
     });
-  }, [orders, search, status]);
+  }, [orders, search, status, paidFilter, dateFrom, dateTo]);
 
   async function confirmDelete() {
     if (!deleting) return;
@@ -92,7 +115,7 @@ export function OrdersPage() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Buscar por número ou cliente…"
           value={search}
@@ -110,6 +133,34 @@ export function OrdersPage() {
             </option>
           ))}
         </select>
+        <select
+          className="border-input bg-transparent dark:bg-input/30 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3"
+          value={paidFilter}
+          onChange={(e) => setPaidFilter(e.target.value)}
+        >
+          {paidFilters.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+        <div className="flex items-center gap-1">
+          <Input
+            type="date"
+            aria-label="Data inicial"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-auto"
+          />
+          <span className="text-muted-foreground text-sm">até</span>
+          <Input
+            type="date"
+            aria-label="Data final"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-auto"
+          />
+        </div>
       </div>
 
       {isLoading ? (
@@ -118,7 +169,7 @@ export function OrdersPage() {
         <p className="text-destructive text-sm">{getErrorMessage(error)}</p>
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          {search || status !== 'all'
+          {hasActiveFilters
             ? 'Nenhuma OS encontrada.'
             : 'Nenhuma OS cadastrada.'}
         </p>

@@ -61,7 +61,7 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 
 ---
 
-## Etapa 3 — F2-03: Filtros completos na listagem (RF-09)
+## Etapa 3 — F2-03: Filtros completos na listagem (RF-09) ✅ concluída
 
 **Objetivo**: completar os filtros da página Ordens.
 
@@ -72,6 +72,8 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 - Cuidado com fuso: comparar `opened_at` como string `YYYY-MM-DD` (é `date`, não timestamp), sem `new Date()`.
 
 **Aceite**: período retorna só OS no intervalo; "a receber" retorna só `paid = false`; filtros combinam corretamente entre si e com a busca.
+
+**Verificado ✅** no stack local — período isola OS por data (18/08 vs 01/08), pago/a-receber corretos, combinação busca+pago confirma E lógico entre filtros.
 
 ---
 

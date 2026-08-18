@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/form/form-field';
 import { getErrorMessage } from '@/lib/errors';
+import { emptyToNull } from '@/lib/form-utils';
 import type { Client, NewClient } from '@/lib/repositories';
 import { useCreateClient, useUpdateClient } from './queries';
 
@@ -41,11 +42,6 @@ const emptyDefaults: FormValues = {
   district: '',
   reference: '',
 };
-
-function emptyToNull(value?: string): string | null {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
-}
 
 type Props = {
   open: boolean;

@@ -33,6 +33,32 @@ export type ServiceOrderItemInput = {
   unit_price: number;
 };
 
+/**
+ * Deslocamento informado pela UI; o repositório atribui `order_id` e `position`.
+ * Todos os campos são opcionais (RN-05).
+ */
+export type TripInput = {
+  date?: string | null;
+  km_start?: number | null;
+  km_end?: number | null;
+  /** Horários no formato "HH:MM". */
+  left_shop_at?: string | null;
+  arrived_at?: string | null;
+  left_client_at?: string | null;
+  back_shop_at?: string | null;
+  vehicle?: string | null;
+  signed_by?: string | null;
+};
+
+/**
+ * Filhos da OS numa escrita. Chave ausente mantém os registros atuais;
+ * array presente substitui o conjunto.
+ */
+export type ServiceOrderChildren = {
+  items?: ServiceOrderItemInput[];
+  trips?: TripInput[];
+};
+
 // OS com filhos (leitura detalhada).
 export type ServiceOrderWithChildren = ServiceOrder & {
   items: ServiceOrderItem[];

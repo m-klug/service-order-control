@@ -7,11 +7,13 @@
 > Convenção mantida: código/banco em inglês (RNF-07); domínio/UI em português.
 > Cada tarefa tem critério de aceite verificável. Verificar no stack Supabase local.
 
-## F2-01 — Deslocamentos na OS (RF-05, RN-05)
-- [ ] Repositório: escrita de `trip` na OS, no mesmo padrão de `replaceItems` (F1-03) — substituição completa por posição sequencial; `trips?: TripInput[]` opcional em `create`/`update` (undefined mantém).
-- [ ] UI no editor de OS: lista dinâmica de deslocamentos (`useFieldArray`), todos os campos opcionais (data, km início/fim, hora saída loja/chegada cliente/fim cliente/retorno loja, carro, visto). Adicionar quantos precisar (RN-05 — os "3 espaços" do papel eram só limitação física).
-- [ ] Layout compacto: cada deslocamento como cartão/linha recolhível (evitar poluir o formulário com N×9 campos abertos).
-- **Aceite**: adicionar 2+ deslocamentos com campos parciais (nem todos preenchidos) salva e recarrega corretamente; remover deslocamento funciona; nenhum campo é obrigatório.
+## F2-01 — Deslocamentos na OS (RF-05, RN-05) ✅
+- [x] Repositório: `replaceTrips` no mesmo padrão de `replaceItems` (F1-03); `create`/`update` recebem `children?: ServiceOrderChildren` (`{ items?, trips? }`) — chave ausente mantém, array presente substitui.
+- [x] UI no editor de OS: lista dinâmica de deslocamentos (`useFieldArray`), todos os campos opcionais (data, km início/fim, hora saída loja/chegada cliente/fim cliente/retorno loja, carro, visto).
+- [x] Layout: cada deslocamento como `<details>/<summary>` recolhível com resumo ao vivo (data + km); recém-adicionado abre expandido, carregado do banco começa recolhido.
+- [x] `emptyToNull` extraído para `src/lib/form-utils.ts` (compartilhado com o diálogo de cliente).
+- **Aceite**: ✅ verificado no stack local — 2 deslocamentos parciais salvam com `position` 1/2 e campos vazios como `null` (não `0`); reabrir carrega tudo certo (recolhidos, resumo correto); salvar sem alterar deslocamentos os mantém intactos; remover reindexa (`position` 1); card utilizável em 375px.
+- **Bug encontrado e corrigido durante a verificação**: `setValueAs` numérico (`numberOrNull`) recebia `null` bruto (valor padrão de campo nunca tocado num `useFieldArray`), não a string do DOM — `Number(null)` é `0` em JS, então km vazios gravavam como `0`. Corrigido tratando `null`/`undefined` explicitamente na função, além da string vazia.
 - **Depende de**: Fase 1.
 
 ## F2-02 — Pagamento, desconto e garantia (RF-08, RN-03, RN-04, RN-07)

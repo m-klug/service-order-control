@@ -10,7 +10,7 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 
 ---
 
-## Etapa 1 — F2-01: Deslocamentos na OS (RF-05, RN-05)
+## Etapa 1 — F2-01: Deslocamentos na OS (RF-05, RN-05) ✅ concluída
 
 **Objetivo**: registrar N deslocamentos por OS, todos os campos opcionais.
 
@@ -36,6 +36,10 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 **Utilitário** — extrair `emptyToNull` (hoje local em `src/features/clients/client-form-dialog.tsx:45`) para `src/lib/form-utils.ts` e importar nos dois lugares.
 
 **Aceite**: 2+ deslocamentos com campos parciais salvam e recarregam na ordem certa (vazios em branco, não `0`/`NaN`); remover funciona; salvar sem tocar nos deslocamentos os mantém intactos; nenhum campo obrigatório.
+
+**Verificado ✅** no stack local — todos os pontos do aceite confirmados via UI + PostgREST.
+
+**Bug encontrado durante a verificação**: `Number(null) === 0` em JS. O `setValueAs` numérico recebia o valor padrão bruto (`null`) para campos nunca tocados dentro de um `useFieldArray` — não a string `""` do DOM, como se assumia. Km vazios gravavam `0` em vez de `null`. Corrigido tratando `null`/`undefined` explicitamente em `numberOrNull`, junto da string vazia. Fica registrado porque o mesmo padrão (`setValueAs` em campo numérico opcional dentro de `useFieldArray`) se repete na Etapa 2 (`amount_paid`, `warranty_months`) — usar a versão corrigida.
 
 ---
 

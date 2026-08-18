@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { serviceOrderRepository } from '@/lib/repositories';
 import type {
   ServiceOrderChanges,
-  ServiceOrderItemInput,
+  ServiceOrderChildren,
   NewServiceOrder,
 } from '@/lib/repositories';
 
@@ -40,11 +40,11 @@ export function useCreateServiceOrder() {
   return useMutation({
     mutationFn: ({
       input,
-      items,
+      children,
     }: {
       input: NewServiceOrder;
-      items: ServiceOrderItemInput[];
-    }) => serviceOrderRepository.create(input, items),
+      children?: ServiceOrderChildren;
+    }) => serviceOrderRepository.create(input, children),
     onSuccess: () => qc.invalidateQueries({ queryKey: ordersKey }),
   });
 }
@@ -55,12 +55,12 @@ export function useUpdateServiceOrder() {
     mutationFn: ({
       id,
       changes,
-      items,
+      children,
     }: {
       id: string;
       changes: ServiceOrderChanges;
-      items?: ServiceOrderItemInput[];
-    }) => serviceOrderRepository.update(id, changes, items),
+      children?: ServiceOrderChildren;
+    }) => serviceOrderRepository.update(id, changes, children),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: ordersKey });
       qc.invalidateQueries({ queryKey: orderKey(id) });

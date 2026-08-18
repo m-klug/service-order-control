@@ -2,28 +2,30 @@ import { supabase } from '@/lib/supabase';
 import type {
   ServiceOrder,
   ServiceOrderChanges,
+  ServiceOrderChildren,
   ServiceOrderItemInput,
   ServiceOrderListItem,
   ServiceOrderWithChildren,
   NewServiceOrder,
+  TripInput,
 } from './types';
 
 export interface ServiceOrderRepository {
   list(): Promise<ServiceOrderListItem[]>;
   getById(id: string): Promise<ServiceOrderWithChildren | null>;
-  /** Cria a OS e seus itens. */
+  /** Cria a OS. `children.items`/`children.trips` ausentes ficam vazios. */
   create(
     input: NewServiceOrder,
-    items: ServiceOrderItemInput[],
+    children?: ServiceOrderChildren,
   ): Promise<ServiceOrder>;
   /**
-   * Atualiza a OS. Se `items` for informado, substitui o conjunto de itens;
-   * `undefined` mantém os itens atuais.
+   * Atualiza a OS. Em `children`, cada chave presente (mesmo `[]`) substitui
+   * o conjunto correspondente; chave ausente mantém os registros atuais.
    */
   update(
     id: string,
     changes: ServiceOrderChanges,
-    items?: ServiceOrderItemInput[],
+    children?: ServiceOrderChildren,
   ): Promise<ServiceOrder>;
   remove(id: string): Promise<void>;
   /** Sugere o próximo número no padrão DDMM + letra (RN-01). */
@@ -81,7 +83,7 @@ export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
 
   async create(
     input: NewServiceOrder,
-    items: ServiceOrderItemInput[],
+    children?: ServiceOrderChildren,
   ): Promise<ServiceOrder> {
     const { data, error } = await supabase
       .from('service_order')
@@ -89,14 +91,15 @@ export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
       .select('*')
       .single();
     if (error) throw error;
-    await this.replaceItems(data.id, items);
+    await this.replaceItems(data.id, children?.items ?? []);
+    await this.replaceTrips(data.id, children?.trips ?? []);
     return data;
   }
 
   async update(
     id: string,
     changes: ServiceOrderChanges,
-    items?: ServiceOrderItemInput[],
+    children?: ServiceOrderChildren,
   ): Promise<ServiceOrder> {
     const { data, error } = await supabase
       .from('service_order')
@@ -105,7 +108,12 @@ export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
       .select('*')
       .single();
     if (error) throw error;
-    if (items !== undefined) await this.replaceItems(id, items);
+    if (children?.items !== undefined) {
+      await this.replaceItems(id, children.items);
+    }
+    if (children?.trips !== undefined) {
+      await this.replaceTrips(id, children.trips);
+    }
     return data;
   }
 
@@ -136,6 +144,40 @@ export class SupabaseServiceOrderRepository implements ServiceOrderRepository {
     const { error: insertError } = await supabase
       .from('service_order_item')
       .insert(rows);
+    if (insertError) throw insertError;
+  }
+
+  /**
+   * Substitui todos os deslocamentos da OS pelos informados (mesmo padrão de
+   * `replaceItems`: remove e reinsere com `position` sequencial). Todos os
+   * campos de cada deslocamento são opcionais (RN-05).
+   */
+  private async replaceTrips(
+    orderId: string,
+    trips: TripInput[],
+  ): Promise<void> {
+    const { error: deleteError } = await supabase
+      .from('trip')
+      .delete()
+      .eq('order_id', orderId);
+    if (deleteError) throw deleteError;
+
+    if (trips.length === 0) return;
+
+    const rows = trips.map((trip, index) => ({
+      order_id: orderId,
+      position: index + 1,
+      date: trip.date ?? null,
+      km_start: trip.km_start ?? null,
+      km_end: trip.km_end ?? null,
+      left_shop_at: trip.left_shop_at ?? null,
+      arrived_at: trip.arrived_at ?? null,
+      left_client_at: trip.left_client_at ?? null,
+      back_shop_at: trip.back_shop_at ?? null,
+      vehicle: trip.vehicle ?? null,
+      signed_by: trip.signed_by ?? null,
+    }));
+    const { error: insertError } = await supabase.from('trip').insert(rows);
     if (insertError) throw insertError;
   }
 

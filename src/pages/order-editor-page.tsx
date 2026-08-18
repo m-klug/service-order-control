@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   useFieldArray,
   useForm,
@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField } from '@/components/form/form-field';
 import { getErrorMessage } from '@/lib/errors';
+import { emptyToNull } from '@/lib/form-utils';
 import { useClients } from '@/features/clients/queries';
 import {
   useCreateServiceOrder,
@@ -36,6 +37,19 @@ const itemSchema = z.object({
   unit_price: z.number({ message: 'Preço' }).min(0, '≥ 0'),
 });
 
+// Todos os campos são opcionais (RN-05) — nada de validação de obrigatoriedade.
+const tripSchema = z.object({
+  date: z.string(),
+  km_start: z.number().nullable(),
+  km_end: z.number().nullable(),
+  left_shop_at: z.string(),
+  arrived_at: z.string(),
+  left_client_at: z.string(),
+  back_shop_at: z.string(),
+  vehicle: z.string(),
+  signed_by: z.string(),
+});
+
 const schema = z.object({
   number: z.string().trim().min(1, 'Informe o número'),
   client_id: z.string().uuid('Selecione o cliente'),
@@ -44,11 +58,39 @@ const schema = z.object({
   request: z.string().optional(),
   report: z.string().optional(),
   items: z.array(itemSchema),
+  trips: z.array(tripSchema),
 });
 
 type FormValues = z.infer<typeof schema>;
+type TripFormValues = FormValues['trips'][number];
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const emptyTrip: TripFormValues = {
+  date: '',
+  km_start: null,
+  km_end: null,
+  left_shop_at: '',
+  arrived_at: '',
+  left_client_at: '',
+  back_shop_at: '',
+  vehicle: '',
+  signed_by: '',
+};
+
+/**
+ * Converte para número ou `null`. Usado como `setValueAs` em campos numéricos
+ * opcionais: RHF chama isto tanto com a string do DOM (`""` quando vazio,
+ * campo tocado) quanto com o valor padrão bruto de campos nunca tocados em
+ * `useFieldArray` (aqui, `null` — daí tratar os dois casos; `Number(null)`
+ * seria `0`, não o `null` esperado).
+ */
+function numberOrNull(
+  value: string | number | null | undefined,
+): number | null {
+  if (value === '' || value === null || value === undefined) return null;
+  return Number(value);
+}
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -68,6 +110,39 @@ function OrderTotal({ control }: { control: Control<FormValues> }) {
       <span>Total</span>
       <span>{brl.format(Math.max(0, total))}</span>
     </div>
+  );
+}
+
+function tripSummaryText(trip: Partial<TripFormValues> | undefined): string {
+  if (!trip) return 'sem dados';
+  const parts: string[] = [];
+  if (trip.date) {
+    const [y, m, d] = trip.date.split('-');
+    if (y && m && d) parts.push(`${d}/${m}/${y}`);
+  }
+  if (
+    trip.km_start != null &&
+    trip.km_end != null &&
+    trip.km_end >= trip.km_start
+  ) {
+    parts.push(`${trip.km_end - trip.km_start} km`);
+  }
+  return parts.length > 0 ? parts.join(' · ') : 'sem dados';
+}
+
+/** Resumo ao vivo exibido no `<summary>` do deslocamento recolhido. */
+function TripSummary({
+  control,
+  index,
+}: {
+  control: Control<FormValues>;
+  index: number;
+}) {
+  const trip = useWatch({ control, name: `trips.${index}` });
+  return (
+    <span className="text-muted-foreground text-sm">
+      {tripSummaryText(trip)}
+    </span>
   );
 }
 
@@ -99,10 +174,39 @@ export function OrderEditorPage() {
       request: '',
       report: '',
       items: [],
+      trips: [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const {
+    fields: tripFields,
+    append: appendTrip,
+    remove: removeTrip,
+  } = useFieldArray({ control, name: 'trips' });
+
+  // Índices dos deslocamentos abertos (recém-adicionados começam expandidos;
+  // carregados do banco começam recolhidos). Baseado em índice: ao remover um
+  // item, os índices seguintes podem abrir/fechar de forma imprecisa — efeito
+  // cosmético aceitável, sem impacto nos dados.
+  const [openTripIndexes, setOpenTripIndexes] = useState<Set<number>>(
+    new Set(),
+  );
+
+  function handleAddTrip() {
+    const newIndex = tripFields.length;
+    appendTrip(emptyTrip);
+    setOpenTripIndexes((prev) => new Set(prev).add(newIndex));
+  }
+
+  function toggleTrip(index: number, open: boolean) {
+    setOpenTripIndexes((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(index);
+      else next.delete(index);
+      return next;
+    });
+  }
 
   // Preenche o formulário ao carregar a OS (edição).
   useEffect(() => {
@@ -119,7 +223,19 @@ export function OrderEditorPage() {
         quantity: Number(item.quantity),
         unit_price: Number(item.unit_price),
       })),
+      trips: order.trips.map((trip) => ({
+        date: trip.date ?? '',
+        km_start: trip.km_start,
+        km_end: trip.km_end,
+        left_shop_at: trip.left_shop_at ?? '',
+        arrived_at: trip.arrived_at ?? '',
+        left_client_at: trip.left_client_at ?? '',
+        back_shop_at: trip.back_shop_at ?? '',
+        vehicle: trip.vehicle ?? '',
+        signed_by: trip.signed_by ?? '',
+      })),
     });
+    setOpenTripIndexes(new Set());
   }, [order, reset]);
 
   // Sugere o número (criação) quando ainda não preenchido.
@@ -145,12 +261,31 @@ export function OrderEditorPage() {
       unit_price: item.unit_price,
     }));
 
+    const trips = values.trips.map((trip) => ({
+      date: emptyToNull(trip.date),
+      km_start: trip.km_start,
+      km_end: trip.km_end,
+      left_shop_at: emptyToNull(trip.left_shop_at),
+      arrived_at: emptyToNull(trip.arrived_at),
+      left_client_at: emptyToNull(trip.left_client_at),
+      back_shop_at: emptyToNull(trip.back_shop_at),
+      vehicle: emptyToNull(trip.vehicle),
+      signed_by: emptyToNull(trip.signed_by),
+    }));
+
     try {
       if (id) {
-        await updateOrder.mutateAsync({ id, changes: payload, items });
+        await updateOrder.mutateAsync({
+          id,
+          changes: payload,
+          children: { items, trips },
+        });
         toast.success('OS atualizada');
       } else {
-        await createOrder.mutateAsync({ input: payload, items });
+        await createOrder.mutateAsync({
+          input: payload,
+          children: { items, trips },
+        });
         toast.success('OS criada');
       }
       navigate('/ordens');
@@ -320,6 +455,141 @@ export function OrderEditorPage() {
               ))
             )}
             <OrderTotal control={control} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Deslocamentos</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddTrip}
+            >
+              <PlusIcon />
+              Adicionar deslocamento
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {tripFields.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Nenhum deslocamento registrado (opcional).
+              </p>
+            ) : (
+              tripFields.map((field, index) => (
+                <details
+                  key={field.id}
+                  open={openTripIndexes.has(index)}
+                  onToggle={(e) => toggleTrip(index, e.currentTarget.open)}
+                  className="rounded-md border"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium">
+                    <span>
+                      Deslocamento {index + 1} ·{' '}
+                      <TripSummary control={control} index={index} />
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Remover deslocamento"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeTrip(index);
+                      }}
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </summary>
+                  <div className="grid gap-4 border-t p-3 sm:grid-cols-2">
+                    <FormField label="Data" htmlFor={`trip-${index}-date`}>
+                      <Input
+                        id={`trip-${index}-date`}
+                        type="date"
+                        {...register(`trips.${index}.date`)}
+                      />
+                    </FormField>
+                    <FormField label="Carro" htmlFor={`trip-${index}-vehicle`}>
+                      <Input
+                        id={`trip-${index}-vehicle`}
+                        {...register(`trips.${index}.vehicle`)}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Km início"
+                      htmlFor={`trip-${index}-km-start`}
+                    >
+                      <Input
+                        id={`trip-${index}-km-start`}
+                        type="number"
+                        min="0"
+                        {...register(`trips.${index}.km_start`, {
+                          setValueAs: numberOrNull,
+                        })}
+                      />
+                    </FormField>
+                    <FormField label="Km fim" htmlFor={`trip-${index}-km-end`}>
+                      <Input
+                        id={`trip-${index}-km-end`}
+                        type="number"
+                        min="0"
+                        {...register(`trips.${index}.km_end`, {
+                          setValueAs: numberOrNull,
+                        })}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Saída da loja"
+                      htmlFor={`trip-${index}-left-shop`}
+                    >
+                      <Input
+                        id={`trip-${index}-left-shop`}
+                        type="time"
+                        {...register(`trips.${index}.left_shop_at`)}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Chegada no cliente"
+                      htmlFor={`trip-${index}-arrived`}
+                    >
+                      <Input
+                        id={`trip-${index}-arrived`}
+                        type="time"
+                        {...register(`trips.${index}.arrived_at`)}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Fim no cliente"
+                      htmlFor={`trip-${index}-left-client`}
+                    >
+                      <Input
+                        id={`trip-${index}-left-client`}
+                        type="time"
+                        {...register(`trips.${index}.left_client_at`)}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Retorno à loja"
+                      htmlFor={`trip-${index}-back-shop`}
+                    >
+                      <Input
+                        id={`trip-${index}-back-shop`}
+                        type="time"
+                        {...register(`trips.${index}.back_shop_at`)}
+                      />
+                    </FormField>
+                    <FormField label="Visto" htmlFor={`trip-${index}-signed`}>
+                      <Input
+                        id={`trip-${index}-signed`}
+                        {...register(`trips.${index}.signed_by`)}
+                      />
+                    </FormField>
+                  </div>
+                </details>
+              ))
+            )}
           </CardContent>
         </Card>
 

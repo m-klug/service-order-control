@@ -66,7 +66,8 @@ Princípio-chave: **a UI e os casos de uso não conhecem o Supabase**. Falam com
 - **Fase 1 — Núcleo OS**: CRUD de cliente; CRUD de OS com itens; numeração automática (RN-01); cálculo de total; status.
 - **Fase 2 — Campo e Financeiro**: deslocamentos dinâmicos; pagamento/desconto/garantia; fluxo mobile de campo.
 - **Fase 3 — Saída e Busca**: geração de PDF da OS; listagem/filtros/busca.
-- **Fase 4 — Polimento**: PWA instalável, validações, testes dos critérios de aceite.
+- **Fase 4 — Usabilidade**: zebra nas tabelas; itens padrão ("Deslocamento" e "Mão de Obra") na OS nova; entrada monetária em pt-BR (`R$` + vírgula); valor pago pré-preenchido e selo "pago a menor"; cliente por busca com criação na hora (fecha a RF-02).
+- **Fase 5 — Polimento**: PWA instalável, validações, testes dos critérios de aceite.
 
 Cada fase entrega algo utilizável e verificável contra os critérios de aceite do MVP.
 

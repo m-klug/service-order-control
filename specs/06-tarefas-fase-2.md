@@ -16,12 +16,13 @@
 - **Bug encontrado e corrigido durante a verificação**: `setValueAs` numérico (`numberOrNull`) recebia `null` bruto (valor padrão de campo nunca tocado num `useFieldArray`), não a string do DOM — `Number(null)` é `0` em JS, então km vazios gravavam como `0`. Corrigido tratando `null`/`undefined` explicitamente na função, além da string vazia.
 - **Depende de**: Fase 1.
 
-## F2-02 — Pagamento, desconto e garantia (RF-08, RN-03, RN-04, RN-07)
-- [ ] Campos no editor de OS: **pago** (checkbox), **valor pago**, **data de quitação**, **desconto**, **garantia (meses)**. Sem método de pagamento (RN-04).
-- [ ] Total ao vivo (F1-05) passa a descontar o campo `desconto` real (hoje fixo em 0); nunca negativo (RN-03).
-- [ ] Validação leve: se marcar "pago" sem valor, avisar (não bloquear — o operador pode ajustar depois).
-- **Aceite**: marcar pago + valor persiste; desconto reflete no total ao vivo e após salvar; garantia salva e recarrega; total nunca fica negativo com desconto maior que os itens.
+## F2-02 — Pagamento, desconto e garantia (RF-08, RN-03, RN-04, RN-07) ✅
+- [x] Card "Pagamento" no editor de OS: **pago** (checkbox nativo estilizado), **valor pago**, **data de quitação**, **desconto**, **garantia (meses)**. Sem método de pagamento (RN-04).
+- [x] `OrderTotal` passa a assistir `discount` via `useWatch`; total = Σ(itens) − desconto, piso em 0 (RN-03).
+- [x] Validação leve: marcar "pago" sem valor dispara `toast.warning`, não bloqueia o salvamento.
+- **Aceite**: ✅ verificado no stack local — desconto 30 sobre total 100 → R$ 70,00 ao vivo e após salvar; desconto 150 (maior que os itens) trava em R$ 0,00; pago sem valor salva com aviso; `amount_paid`/`warranty_months`/`settled_at` persistem como `null` quando vazios (não `0`); editar preenche e persiste todos os campos; card utilizável em 375px.
 - **Depende de**: Fase 1.
+- **Reuso da correção da F2-01**: `numberOrNull` (agora trata `null`/`undefined`, não só `''`) usado em `amount_paid`/`warranty_months`; `numberOrZero` (mesma lógica, padrão 0) para `discount`, que é `not null default 0` no banco.
 
 ## F2-03 — Filtros completos na listagem de OS (RF-09)
 - [ ] Adicionar à página Ordens (F1-06) os filtros que faltaram: **período** (data inicial/final sobre `opened_at`) e **pago/não pago**.

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { FormField } from '@/components/form/form-field';
 import { getErrorMessage } from '@/lib/errors';
 import { emptyToNull } from '@/lib/form-utils';
@@ -59,6 +60,11 @@ const schema = z.object({
   report: z.string().optional(),
   items: z.array(itemSchema),
   trips: z.array(tripSchema),
+  paid: z.boolean(),
+  amount_paid: z.number().nullable(),
+  settled_at: z.string(),
+  discount: z.number().min(0, '≥ 0'),
+  warranty_months: z.number().nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -92,19 +98,26 @@ function numberOrNull(
   return Number(value);
 }
 
+/** Mesma lógica de `numberOrNull`, mas para campos não anuláveis (padrão 0). */
+function numberOrZero(value: string | number | null | undefined): number {
+  return numberOrNull(value) ?? 0;
+}
+
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
 });
 
-/** Total ao vivo: Σ(qtd × preço) − desconto (0 nesta fase), nunca negativo. */
+/** Total ao vivo: Σ(qtd × preço) − desconto (RN-03), nunca negativo. */
 function OrderTotal({ control }: { control: Control<FormValues> }) {
   const items = useWatch({ control, name: 'items' });
-  const total = (items ?? []).reduce((sum, item) => {
+  const discount = useWatch({ control, name: 'discount' });
+  const itemsTotal = (items ?? []).reduce((sum, item) => {
     const quantity = Number(item?.quantity) || 0;
     const price = Number(item?.unit_price) || 0;
     return sum + quantity * price;
   }, 0);
+  const total = itemsTotal - (Number(discount) || 0);
   return (
     <div className="flex items-center justify-between border-t pt-3 text-sm font-medium">
       <span>Total</span>
@@ -175,6 +188,11 @@ export function OrderEditorPage() {
       report: '',
       items: [],
       trips: [],
+      paid: false,
+      amount_paid: null,
+      settled_at: '',
+      discount: 0,
+      warranty_months: null,
     },
   });
 
@@ -234,6 +252,11 @@ export function OrderEditorPage() {
         vehicle: trip.vehicle ?? '',
         signed_by: trip.signed_by ?? '',
       })),
+      paid: order.paid,
+      amount_paid: order.amount_paid,
+      settled_at: order.settled_at ?? '',
+      discount: Number(order.discount),
+      warranty_months: order.warranty_months,
     });
     setOpenTripIndexes(new Set());
   }, [order, reset]);
@@ -246,6 +269,10 @@ export function OrderEditorPage() {
   }, [isEditing, suggestedNumber, setValue]);
 
   async function onSubmit(values: FormValues) {
+    if (values.paid && !values.amount_paid) {
+      toast.warning('OS marcada como paga sem valor pago informado.');
+    }
+
     const payload = {
       number: values.number.trim(),
       client_id: values.client_id,
@@ -253,6 +280,11 @@ export function OrderEditorPage() {
       status: values.status,
       request: values.request?.trim() || null,
       report: values.report?.trim() || null,
+      paid: values.paid,
+      amount_paid: values.amount_paid,
+      settled_at: emptyToNull(values.settled_at),
+      discount: values.discount,
+      warranty_months: values.warranty_months,
     };
 
     const items = values.items.map((item) => ({
@@ -455,6 +487,69 @@ export function OrderEditorPage() {
               ))
             )}
             <OrderTotal control={control} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pagamento</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                id="paid"
+                type="checkbox"
+                className="border-input accent-foreground h-4 w-4 rounded"
+                {...register('paid')}
+              />
+              <Label htmlFor="paid">Pago</Label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="Valor pago"
+                htmlFor="amount_paid"
+                error={errors.amount_paid?.message}
+              >
+                <Input
+                  id="amount_paid"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register('amount_paid', { setValueAs: numberOrNull })}
+                />
+              </FormField>
+              <FormField label="Data de quitação" htmlFor="settled_at">
+                <Input
+                  id="settled_at"
+                  type="date"
+                  {...register('settled_at')}
+                />
+              </FormField>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="Desconto"
+                htmlFor="discount"
+                error={errors.discount?.message}
+              >
+                <Input
+                  id="discount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register('discount', { setValueAs: numberOrZero })}
+                />
+              </FormField>
+              <FormField label="Garantia (meses)" htmlFor="warranty_months">
+                <Input
+                  id="warranty_months"
+                  type="number"
+                  step="1"
+                  min="0"
+                  {...register('warranty_months', { setValueAs: numberOrNull })}
+                />
+              </FormField>
+            </div>
           </CardContent>
         </Card>
 

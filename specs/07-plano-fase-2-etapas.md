@@ -43,7 +43,7 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 
 ---
 
-## Etapa 2 — F2-02: Pagamento, desconto e garantia (RF-08, RN-03, RN-04, RN-07)
+## Etapa 2 — F2-02: Pagamento, desconto e garantia (RF-08, RN-03, RN-04, RN-07) ✅ concluída
 
 **Objetivo**: fechar os campos financeiros da OS; o desconto passa a valer no total.
 
@@ -56,6 +56,8 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 - Se o checkbox de shadcn não estiver instalado, usar `<input type="checkbox">` nativo estilizado, coerente com a decisão dos `<select>` nativos da F1-04.
 
 **Aceite**: pago + valor persistem; desconto reflete no total ao vivo e após salvar; garantia salva e recarrega; desconto maior que os itens não deixa o total negativo.
+
+**Verificado ✅** no stack local — todos os pontos confirmados via UI + PostgREST. A armadilha do `Number(null) === 0` (documentada na Etapa 1) reapareceu conforme previsto em `amount_paid`/`warranty_months`; resolvida reusando o `numberOrNull` já corrigido, mais um `numberOrZero` para `discount` (não anulável no banco, `default 0`).
 
 ---
 

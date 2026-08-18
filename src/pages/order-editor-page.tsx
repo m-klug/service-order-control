@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { FormField } from '@/components/form/form-field';
 import { getErrorMessage } from '@/lib/errors';
 import { emptyToNull } from '@/lib/form-utils';
+import { formatCurrency } from '@/lib/format';
 import { useClients } from '@/features/clients/queries';
 import {
   useCreateServiceOrder,
@@ -25,6 +26,7 @@ import {
   useSuggestedOrderNumber,
   useUpdateServiceOrder,
 } from '@/features/orders/queries';
+import { generateServiceOrderPdf } from '@/features/orders/pdf/generate-service-order-pdf';
 
 const statusOptions = [
   { value: 'open', label: 'Aberta' },
@@ -103,11 +105,6 @@ function numberOrZero(value: string | number | null | undefined): number {
   return numberOrNull(value) ?? 0;
 }
 
-const brl = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-});
-
 /** Total ao vivo: Σ(qtd × preço) − desconto (RN-03), nunca negativo. */
 function OrderTotal({ control }: { control: Control<FormValues> }) {
   const items = useWatch({ control, name: 'items' });
@@ -121,7 +118,7 @@ function OrderTotal({ control }: { control: Control<FormValues> }) {
   return (
     <div className="flex items-center justify-between border-t pt-3 text-sm font-medium">
       <span>Total</span>
-      <span>{brl.format(Math.max(0, total))}</span>
+      <span>{formatCurrency(Math.max(0, total))}</span>
     </div>
   );
 }
@@ -169,6 +166,26 @@ export function OrderEditorPage() {
   const { data: suggestedNumber } = useSuggestedOrderNumber(!isEditing);
   const createOrder = useCreateServiceOrder();
   const updateOrder = useUpdateServiceOrder();
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  async function handleGeneratePdf() {
+    if (!order) return;
+    const client = clients?.find((c) => c.id === order.client_id);
+    if (!client) {
+      toast.error('Cliente da OS não encontrado');
+      return;
+    }
+    setGeneratingPdf(true);
+    try {
+      await generateServiceOrderPdf(order, client);
+    } catch (error) {
+      toast.error('Não foi possível gerar o PDF', {
+        description: getErrorMessage(error),
+      });
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }
 
   const {
     register,
@@ -694,6 +711,16 @@ export function OrderEditorPage() {
         </Card>
 
         <div className="flex justify-end gap-2">
+          {isEditing ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={generatingPdf}
+              onClick={handleGeneratePdf}
+            >
+              {generatingPdf ? 'Gerando…' : 'Gerar PDF'}
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"

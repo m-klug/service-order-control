@@ -1,0 +1,10 @@
+node_modules
+dist
+dev-dist
+.git
+.env
+.env.*
+!.env.example
+supabase/.branches
+supabase/.temp
+docker/db/data

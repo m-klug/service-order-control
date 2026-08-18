@@ -1,0 +1,222 @@
+name: service-order-control
+
+services:
+  db:
+    container_name: soc-db
+    image: supabase/postgres:15.1.1.78
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: ${POSTGRES_PORT}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: ${JWT_EXPIRY}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Mount de arquivos individuais (não do diretório inteiro!) — a imagem
+      # supabase/postgres já traz seu próprio /docker-entrypoint-initdb.d
+      # (migrate.sh + init-scripts/ que criam roles, auth.users, etc.).
+      # Sobrescrever o diretório inteiro apagaria esse setup. Prefixo 99-
+      # garante que nossos scripts rodam por último.
+      - ./db/init/01-roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./db/init/02-jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+
+  auth:
+    container_name: soc-auth
+    image: supabase/gotrue:v2.158.1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9999/health",
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 5
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+      GOTRUE_SITE_URL: ${SITE_URL}
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      # Apesar do aviso de deprecation no log, é isto que preenche o claim
+      # "role" do token emitido (v2.158.1) — sem ele, role fica "" e o
+      # PostgREST rejeita com "role \"\" does not exist". Confirmado ao
+      # remover e quebrar; mantido de propósito.
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMS_AUTOCONFIRM: "true"
+
+  # Serviço "one-shot": aplica supabase/migrations/*.sql (schema, triggers,
+  # RLS) contra o banco. `auth.users` já existe assim que `db` fica saudável
+  # (é criada pelo próprio setup interno da imagem supabase/postgres, não
+  # pelo GoTrue). Fonte única das migrations é ../supabase/migrations — nada
+  # duplicado aqui.
+  migrate:
+    container_name: soc-migrate
+    image: supabase/postgres:15.1.1.78
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../supabase/migrations:/migrations:ro
+    entrypoint: ["/bin/bash", "-c"]
+    # Idempotente: guarda o nome de cada migration aplicada numa tabela de
+    # controle (mesmo padrão do `supabase` CLI), então re-rodar o serviço
+    # (comum com `depends_on` em cada `docker compose up`) não tenta
+    # reaplicar o que já existe.
+    command:
+      - |
+        set -e
+        PSQL="psql -h db -p ${POSTGRES_PORT} -U postgres -d ${POSTGRES_DB}"
+        $$PSQL -v ON_ERROR_STOP=1 -c "
+          create schema if not exists supabase_migrations;
+          create table if not exists supabase_migrations.schema_migrations (
+            version text primary key,
+            inserted_at timestamptz not null default now()
+          );
+        "
+        for f in /migrations/*.sql; do
+          version=$$(basename "$$f" .sql)
+          applied=$$($$PSQL -tAc "select 1 from supabase_migrations.schema_migrations where version = '$$version'")
+          if [ "$$applied" = "1" ]; then
+            echo "Já aplicada: $$f"
+            continue
+          fi
+          echo "Aplicando $$f"
+          $$PSQL -v ON_ERROR_STOP=1 -f "$$f"
+          $$PSQL -v ON_ERROR_STOP=1 -c "insert into supabase_migrations.schema_migrations (version) values ('$$version')"
+        done
+        echo "Migrations aplicadas."
+
+  rest:
+    container_name: soc-rest
+    image: postgrest/postgrest:v12.2.0
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    command: ["postgrest"]
+
+  meta:
+    container_name: soc-meta
+    image: supabase/postgres-meta:v0.83.2
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: ${POSTGRES_PORT}
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+  studio:
+    container_name: soc-studio
+    image: supabase/studio:20240923-2e3e90c
+    restart: unless-stopped
+    depends_on:
+      - meta
+    # O healthcheck embutido na imagem testa localhost:3000 de dentro do
+    # próprio container, mas o Next.js aqui só liga na interface de rede do
+    # Docker — dá falso "unhealthy" mesmo funcionando (confirmado via Kong).
+    # Nada depende do Studio estar "healthy", então desligamos o check.
+    healthcheck:
+      disable: true
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION:-Beto Sistemas}
+      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT:-Controle de OS}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: ${API_EXTERNAL_URL}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_LOGS: "false"
+
+  # Gateway único: unifica auth/rest/meta/studio numa porta só, do mesmo
+  # jeito que o `supabase start` local expõe tudo em http://127.0.0.1:54321.
+  kong:
+    container_name: soc-kong
+    image: kong:2.8.1
+    restart: unless-stopped
+    depends_on:
+      - auth
+      - rest
+      - studio
+    ports:
+      - "${KONG_HTTP_PORT:-8000}:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+    volumes:
+      - ./kong/kong.yml:/home/kong/temp.yml:ro
+    # kong.yml é um template com $VAR em texto puro — Kong não expande
+    # sozinho. Substitui via eval/echo (mesmo truque do self-host oficial)
+    # antes de subir, gerando o /home/kong/kong.yml de verdade.
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+
+  app:
+    container_name: soc-app
+    build:
+      context: ..
+      dockerfile: docker/app/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    ports:
+      - "${APP_HTTP_PORT:-8080}:80"
+
+volumes:
+  db-data:

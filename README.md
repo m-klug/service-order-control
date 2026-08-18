@@ -66,9 +66,8 @@ Crie o usuário operador pelo Studio (`http://127.0.0.1:54323` →
 Authentication → Add user) ou pela admin API. Pare a stack com
 `pnpm dlx supabase stop`. Os dados persistem em volumes Docker.
 
-> Para um servidor permanente/endurecido (ex.: em um LXC), o caminho de
-> evolução é o compose oficial de produção (`supabase/docker`) com secrets
-> próprios — mesma API, mesmas migrations.
+> Para um servidor permanente/endurecido (ex.: um LXC no Proxmox), use a
+> **Opção C** abaixo.
 
 ### Opção B — Nuvem (produção gerenciada)
 
@@ -86,6 +85,15 @@ Authentication → Add user) ou pela admin API. Pare a stack com
 **Migrar do local para a nuvem**: troque as duas variáveis do `.env`, faça
 `supabase link` + `db push` (abaixo) e crie o usuário no dashboard. Nada de
 código muda.
+
+### Opção C — Produção self-hosted (servidor próprio, ex. LXC no Proxmox)
+
+Stack completa em Docker Compose (Postgres, Auth, PostgREST, gateway, Studio
+e o build do frontend) pronta pra rodar num servidor seu, fora da nuvem.
+Veja [`docker/README.md`](docker/README.md) — inclui notas de configuração
+do LXC, geração de chaves, criação do usuário operador e operação do dia a
+dia (backup, atualização, logs). Mesmas migrations de `supabase/migrations/`,
+aplicadas automaticamente na subida.
 
 O cliente tipado fica em `src/lib/supabase.ts`; a app fala com ele apenas
 pela camada de repositório (T-09). Sem as chaves, funcionalidades que usam

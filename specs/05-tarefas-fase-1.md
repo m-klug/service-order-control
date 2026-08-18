@@ -57,14 +57,17 @@
 - **Depende de**: F1-04, F1-05.
 
 ## F1-07 — Verificação da Fase 1
-- [ ] Fluxo ponta a ponta no stack local: cadastrar cliente → criar OS (número sugerido, itens, status) → total correto → OS aparece na lista → editar itens/status → excluir OS.
-- [ ] Conferir no mobile (campo) e desktop (escritório) que as telas são utilizáveis.
-- **Aceite**: fluxo completo verde; nada de acesso ao Supabase fora da camada de repositório.
+## F1-07 — Verificação da Fase 1 ✅
+- [x] Banco local resetado limpo (`supabase db reset` + usuário de teste recriado); fluxo ponta a ponta refeito do zero pela UI: criar cliente (Condomínio Jardim) → criar OS (número sugerido `1708a`, 2 itens, total R$ 192,00) → OS aparece na lista com cliente e total corretos → editar (status → Concluída, remover item → total R$ 97,00, lista reflete) → excluir OS (lista some, "Nenhuma OS cadastrada.").
+- [x] Conferido em mobile (375px) e desktop (1280px): editor de OS utilizável nos dois — campos full-width e bottom nav no mobile; itens cabem na largura (descrição um pouco estreita, polish futuro).
+- **Aceite**: ✅ fluxo completo verde partindo de banco limpo; toda leitura/escrita passou pela camada de repositório (nenhum acesso direto ao Supabase fora dela).
 - **Depende de**: F1-01..F1-06.
 
-## Definição de Pronto da Fase 1
-- Clientes: CRUD completo com busca.
-- OS: criar/editar com número automático (RN-01), itens e total ao vivo (RN-03), status e textos (solicitação/relatório).
-- Ordens: listagem com busca e filtro por status.
-- Tudo pela camada de repositório; verificado no stack local; `build`/`lint`/`prettier` verdes.
+## Definição de Pronto da Fase 1 ✅
+- [x] Clientes: CRUD completo com busca.
+- [x] OS: criar/editar com número automático (RN-01), itens e total ao vivo (RN-03), status e textos (solicitação/relatório).
+- [x] Ordens: listagem com busca e filtro por status.
+- [x] Tudo pela camada de repositório; verificado no stack local; `build`/`lint`/`prettier` verdes.
 - **Critérios de aceite do MVP cobertos até aqui**: 1 (cliente reutilizável), 2 (criar OS com número/itens — deslocamentos/garantia/desconto na Fase 2), 3 (total correto), 5 (listar/buscar — parcial).
+
+**FASE 1 CONCLUÍDA.** Próximo: Fase 2 (deslocamentos, pagamento, desconto/garantia na UI, fluxo mobile de campo).

@@ -77,7 +77,7 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 
 ---
 
-## Etapa 4 — F2-04: Página Financeiro
+## Etapa 4 — F2-04: Página Financeiro ✅ concluída
 
 **Objetivo**: substituir o placeholder por uma visão simples de pago × a receber.
 
@@ -89,6 +89,8 @@ Cada etapa abaixo é **independente e executável isoladamente**, na ordem indic
 - Sem gráficos ou dashboard (RNF-05); linha clicável leva ao editor da OS, como na listagem.
 
 **Aceite**: mostra OS reais com totais e situação corretos; a soma "a receber" bate com a soma manual das OS não pagas exibidas.
+
+**Verificado ✅** no stack local — R$ 250,00 bate com a soma manual, filtro de período recalcula, clique abre o editor, usável em 375px.
 
 ---
 

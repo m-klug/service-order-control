@@ -30,11 +30,11 @@
 - **Aceite**: ✅ verificado no stack local — período 18/08–18/08 mantém as 6 OS do dia e exclui uma de 01/08; período 01/08–01/08 isola só essa; "A receber" exclui as 2 pagas; "Pago" retorna exatamente as 2 pagas; busca "1808" + Pago retorna só a interseção correta (E lógico).
 - **Depende de**: F2-02 (campo `paid` editável na UI).
 
-## F2-04 — Página Financeiro (RNF do plano técnico: visão financeira simples)
-- [ ] Substituir o placeholder da página Financeiro por uma lista: OS, cliente, total, situação (pago/a receber), valor pago.
-- [ ] Separação ou destaque visual entre "pago" e "a receber"; total geral a receber no período visível.
-- [ ] Sem gráficos/dashboard — lista simples, consistente com RNF-05 (simplicidade).
-- **Aceite**: página mostra OS reais com totais e situação corretos; soma "a receber" bate com a soma manual das OS não pagas exibidas.
+## F2-04 — Página Financeiro (RNF do plano técnico: visão financeira simples) ✅
+- [x] Substituído o placeholder por lista real: número, cliente, data, total, situação (Pago/A receber, cor), valor pago. Reusa `useServiceOrders`/`ServiceOrderListItem` — nenhuma mudança no repositório.
+- [x] Card "Total a receber" em destaque no topo; filtro de período (mesmo padrão da F2-03).
+- [x] Sem gráficos/dashboard (RNF-05); linha clicável leva ao editor da OS, como na listagem de Ordens.
+- **Aceite**: ✅ verificado no stack local — total a receber R$ 250,00 bate com a soma manual (200+50+0+0+0 das não pagas); filtro de período recalcula o total corretamente; situação e valor pago corretos por linha; clique na linha abre o editor; usável em 375px.
 - **Depende de**: F2-02.
 
 ## F2-05 — Fluxo mobile de campo (RNF-02, contexto "campo" da spec)

@@ -30,7 +30,6 @@ import {
   useSuggestedOrderNumber,
   useUpdateServiceOrder,
 } from '@/features/orders/queries';
-import { generateServiceOrderPdf } from '@/features/orders/pdf/generate-service-order-pdf';
 
 const statusOptions = [
   { value: 'open', label: 'Aberta' },
@@ -184,6 +183,8 @@ export function OrderEditorPage() {
     }
     setGeneratingPdf(true);
     try {
+      const { generateServiceOrderPdf } =
+        await import('@/features/orders/pdf/generate-service-order-pdf');
       await generateServiceOrderPdf(order, client);
     } catch (error) {
       toast.error('Não foi possível gerar o PDF', {

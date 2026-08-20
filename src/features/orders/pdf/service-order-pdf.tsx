@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { DEFAULT_ITEM_DESCRIPTIONS } from '@/features/orders/default-items';
+import { LogoMark } from './logo-mark';
 import type {
   Client,
   ServiceOrderWithChildren,
@@ -31,9 +32,11 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 9, color: '#555', marginBottom: 12 },
   headerRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   section: { marginBottom: 12 },
   sectionTitle: {
     fontSize: 11,
@@ -86,9 +89,12 @@ export function ServiceOrderPdfDocument({
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Beto Sistemas de Segurança</Text>
-            <Text style={styles.subtitle}>Ordem de Serviço</Text>
+          <View style={styles.headerLeft}>
+            <LogoMark size={32} />
+            <View>
+              <Text style={styles.title}>Beto Sistemas de Segurança</Text>
+              <Text style={styles.subtitle}>Ordem de Serviço</Text>
+            </View>
           </View>
           <View>
             <Text>Número: {order.number}</Text>

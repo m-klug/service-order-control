@@ -214,5 +214,5 @@ dado persistido além do que já era gravado.
   aberto da `01-especificacao.md` §9 e não-objetivos do MVP.
 - **Diferença de "pago a menor" no total a receber** — decisão provisória de não
   incluir, revisitar junto dos relatórios.
-- **Logo/identidade visual no PDF**, code splitting do bundle (~2 MB, o
-  `@react-pdf/renderer` carrega sempre) — candidatos a roadmap.
+- **Logo/identidade visual no PDF** e code splitting do bundle — feitos nas
+  Fases 5 e 6 (ver `10-plano-fase-6-identidade-visual.md`).

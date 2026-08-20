@@ -61,7 +61,7 @@ export function AppLayout() {
       </aside>
 
       {/* Header — mobile / campo */}
-      <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 backdrop-blur md:hidden">
+      <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10 flex items-center justify-between border-b px-4 pt-[calc(0.75rem_+_env(safe-area-inset-top))] pb-3 backdrop-blur md:hidden">
         <p className="text-base font-semibold">Ordens de Serviço</p>
         <div className="flex gap-2">
           <ThemeToggle />
@@ -70,12 +70,12 @@ export function AppLayout() {
       </header>
 
       {/* Conteúdo */}
-      <main className="px-4 pt-4 pb-24 md:ml-60 md:px-8 md:py-8">
+      <main className="px-4 pt-4 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:ml-60 md:px-8 md:py-8">
         <Outlet />
       </main>
 
       {/* Barra inferior — mobile / campo */}
-      <nav className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t backdrop-blur md:hidden">
+      <nav className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {navItems.map((item) => (
           <NavLink
             key={item.to}

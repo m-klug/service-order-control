@@ -7,12 +7,14 @@ import './index.css';
 import { queryClient } from './lib/query-client';
 import { AuthProvider } from './lib/auth-context';
 import { router } from './router';
+import { PwaUpdater } from './components/pwa-updater';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <PwaUpdater />
           <RouterProvider router={router} />
         </AuthProvider>
       </QueryClientProvider>

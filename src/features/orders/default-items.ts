@@ -1,5 +1,5 @@
 /**
- * Descrições dos itens pré-adicionados em toda OS nova (quantidade e preço 0,
+ * Descrições dos itens pré-adicionados em toda OS nova (quantidade 0,
  * editáveis/removíveis). O PDF reconhece essas duas descrições exatas para
  * omitir a linha quando ela não foi usada (quantidade 0) — ver
  * `pdf/service-order-pdf.tsx`.
@@ -8,6 +8,15 @@ export const DEFAULT_ITEM_DESCRIPTIONS = [
   'Deslocamento',
   'Mão de Obra',
 ] as const;
+
+/** Preço sugerido ao criar a OS; livremente editável, não força cobrança. */
+const DEFAULT_UNIT_PRICES: Record<string, number> = {
+  Deslocamento: 95,
+};
+
+export function defaultUnitPriceFor(description: string): number {
+  return DEFAULT_UNIT_PRICES[description] ?? 0;
+}
 
 /** Ordem fixa dos itens padrão ao final da lista: penúltimo Mão de Obra, último Deslocamento. */
 const DISPLAY_RANK: Record<string, number> = {

@@ -25,6 +25,7 @@ import { useClients } from '@/features/clients/queries';
 import { ClientCombobox } from '@/features/clients/client-combobox';
 import {
   DEFAULT_ITEM_DESCRIPTIONS,
+  defaultUnitPriceFor,
   sortItemsForDisplay,
 } from '@/features/orders/default-items';
 import {
@@ -219,7 +220,7 @@ export function OrderEditorPage() {
         DEFAULT_ITEM_DESCRIPTIONS.map((description) => ({
           description,
           quantity: 0,
-          unit_price: 0,
+          unit_price: defaultUnitPriceFor(description),
         })),
       ),
       trips: [],
@@ -341,10 +342,13 @@ export function OrderEditorPage() {
   // number, não undefined).
   useEffect(() => {
     if (isEditing) return;
-    DEFAULT_ITEM_DESCRIPTIONS.forEach((_, index) => {
-      setValue(`items.${index}.unit_price`, 0);
+    getValues('items').forEach((item, index) => {
+      setValue(
+        `items.${index}.unit_price`,
+        defaultUnitPriceFor(item.description),
+      );
     });
-  }, [isEditing, setValue]);
+  }, [isEditing, setValue, getValues]);
 
   async function onSubmit(values: FormValues) {
     if (values.paid && values.amount_paid == null) {

@@ -124,6 +124,13 @@ export function FinancePage() {
                     >
                       {order.paid ? 'Pago' : 'A receber'}
                     </span>
+                    {order.paid &&
+                    order.amount_paid != null &&
+                    order.amount_paid < order.total ? (
+                      <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                        pago a menor
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell className="text-right">
                     {order.amount_paid != null

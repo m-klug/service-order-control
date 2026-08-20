@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import {
   Controller,
   useFieldArray,
@@ -103,20 +103,28 @@ function numberOrNull(
   return Number(value);
 }
 
-/** Total ao vivo: Σ(qtd × preço) − desconto (RN-03), nunca negativo. */
-function OrderTotal({ control }: { control: Control<FormValues> }) {
-  const items = useWatch({ control, name: 'items' });
-  const discount = useWatch({ control, name: 'discount' });
+/** Σ(qtd × preço) − desconto (RN-03), nunca negativo. */
+function calculateOrderTotal(
+  items: { quantity?: number; unit_price?: number }[] | undefined,
+  discount: number | undefined,
+): number {
   const itemsTotal = (items ?? []).reduce((sum, item) => {
     const quantity = Number(item?.quantity) || 0;
     const price = Number(item?.unit_price) || 0;
     return sum + quantity * price;
   }, 0);
-  const total = itemsTotal - (Number(discount) || 0);
+  return Math.max(0, itemsTotal - (Number(discount) || 0));
+}
+
+/** Total ao vivo, reflexo de `calculateOrderTotal`. */
+function OrderTotal({ control }: { control: Control<FormValues> }) {
+  const items = useWatch({ control, name: 'items' });
+  const discount = useWatch({ control, name: 'discount' });
+  const total = calculateOrderTotal(items, discount);
   return (
     <div className="flex items-center justify-between border-t pt-3 text-sm font-medium">
       <span>Total</span>
-      <span>{formatCurrency(Math.max(0, total))}</span>
+      <span>{formatCurrency(total)}</span>
     </div>
   );
 }
@@ -191,6 +199,7 @@ export function OrderEditorPage() {
     handleSubmit,
     reset,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -215,7 +224,12 @@ export function OrderEditorPage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const {
+    fields,
+    append,
+    remove,
+    replace: replaceItems,
+  } = useFieldArray({ control, name: 'items', shouldUnregister: true });
   const {
     fields: tripFields,
     append: appendTrip,
@@ -248,6 +262,11 @@ export function OrderEditorPage() {
   // Preenche o formulário ao carregar a OS (edição).
   useEffect(() => {
     if (!order) return;
+    const items = order.items.map((item) => ({
+      description: item.description,
+      quantity: Number(item.quantity),
+      unit_price: Number(item.unit_price),
+    }));
     reset({
       number: order.number,
       client_id: order.client_id,
@@ -255,11 +274,6 @@ export function OrderEditorPage() {
       status: order.status,
       request: order.request ?? '',
       report: order.report ?? '',
-      items: order.items.map((item) => ({
-        description: item.description,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
-      })),
       trips: order.trips.map((trip) => ({
         date: trip.date ?? '',
         km_start: trip.km_start,
@@ -277,8 +291,18 @@ export function OrderEditorPage() {
       discount: Number(order.discount),
       warranty_months: order.warranty_months,
     });
+    // `items` fica de fora do reset() acima e usa `replace()` do próprio
+    // `useFieldArray` (com `shouldUnregister: true` só nesse array — ver
+    // sua declaração): ao encolher o array (OS sem itens, ou com menos
+    // itens que os 2 padrão), o `reset()` sozinho não limpa os campos
+    // `unit_price` controlados via `Controller` (CurrencyField). Sobram
+    // entradas fantasma que só aparecem na validação do submit — sem erro
+    // visível na tela — e em StrictMode (dev) o efeito roda em dobro,
+    // tornando o problema mais fácil de reproduzir. `register`-based
+    // `trips` não sofre do mesmo problema, segue resetado acima.
+    replaceItems(items);
     setOpenTripIndexes(new Set());
-  }, [order, reset]);
+  }, [order, reset, replaceItems]);
 
   // Sugere o número (criação) quando ainda não preenchido.
   useEffect(() => {
@@ -288,7 +312,7 @@ export function OrderEditorPage() {
   }, [isEditing, suggestedNumber, setValue]);
 
   async function onSubmit(values: FormValues) {
-    if (values.paid && !values.amount_paid) {
+    if (values.paid && values.amount_paid == null) {
       toast.warning('OS marcada como paga sem valor pago informado.');
     }
 
@@ -664,7 +688,17 @@ export function OrderEditorPage() {
                 id="paid"
                 type="checkbox"
                 className="border-input accent-foreground h-4 w-4 rounded"
-                {...register('paid')}
+                {...register('paid', {
+                  onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                    if (!event.target.checked) return;
+                    if (getValues('amount_paid') != null) return;
+                    const total = calculateOrderTotal(
+                      getValues('items'),
+                      getValues('discount'),
+                    );
+                    if (total > 0) setValue('amount_paid', total);
+                  },
+                })}
               />
               <Label htmlFor="paid">Pago</Label>
             </div>

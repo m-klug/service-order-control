@@ -48,9 +48,19 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** Presente = edição; ausente = criação. */
   client?: Client;
+  /** Nome inicial ao criar (ex.: texto digitado no combobox de cliente). */
+  initialName?: string;
+  /** Disparado após criar com sucesso, com o cliente recém-criado. */
+  onCreated?: (client: Client) => void;
 };
 
-export function ClientFormDialog({ open, onOpenChange, client }: Props) {
+export function ClientFormDialog({
+  open,
+  onOpenChange,
+  client,
+  initialName,
+  onCreated,
+}: Props) {
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const isEditing = Boolean(client);
@@ -78,9 +88,9 @@ export function ClientFormDialog({ open, onOpenChange, client }: Props) {
             district: client.district ?? '',
             reference: client.reference ?? '',
           }
-        : emptyDefaults,
+        : { ...emptyDefaults, name: initialName ?? '' },
     );
-  }, [open, client, reset]);
+  }, [open, client, initialName, reset]);
 
   async function onSubmit(values: FormValues) {
     const payload: NewClient = {
@@ -98,8 +108,9 @@ export function ClientFormDialog({ open, onOpenChange, client }: Props) {
         await updateClient.mutateAsync({ id: client.id, changes: payload });
         toast.success('Cliente atualizado');
       } else {
-        await createClient.mutateAsync(payload);
+        const created = await createClient.mutateAsync(payload);
         toast.success('Cliente criado');
+        onCreated?.(created);
       }
       onOpenChange(false);
     } catch (error) {

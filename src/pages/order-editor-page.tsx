@@ -22,6 +22,7 @@ import { getErrorMessage } from '@/lib/errors';
 import { emptyToNull } from '@/lib/form-utils';
 import { formatCurrency } from '@/lib/format';
 import { useClients } from '@/features/clients/queries';
+import { ClientCombobox } from '@/features/clients/client-combobox';
 import { DEFAULT_ITEM_DESCRIPTIONS } from '@/features/orders/default-items';
 import {
   useCreateServiceOrder,
@@ -419,18 +420,19 @@ export function OrderEditorPage() {
                 htmlFor="client_id"
                 error={errors.client_id?.message}
               >
-                <select
-                  id="client_id"
-                  className="border-input bg-transparent dark:bg-input/30 h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3"
-                  {...register('client_id')}
-                >
-                  <option value="">Selecione…</option>
-                  {(clients ?? []).map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="client_id"
+                  render={({ field }) => (
+                    <ClientCombobox
+                      id="client_id"
+                      clients={clients ?? []}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
               </FormField>
               <FormField label="Status" htmlFor="status">
                 <select

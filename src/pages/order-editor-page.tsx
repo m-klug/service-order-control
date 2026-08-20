@@ -312,6 +312,18 @@ export function OrderEditorPage() {
     }
   }, [isEditing, suggestedNumber, setValue]);
 
+  // Garante o `unit_price` dos itens padrão (criação) mesmo se o efeito de
+  // registro do Controller (CurrencyField) rodar em ordem diferente do
+  // esperado sob StrictMode (dev): sem isto, os itens nunca tocados podem
+  // chegar ao submit sem essa chave e falhar a validação (`min(0)` exige
+  // number, não undefined).
+  useEffect(() => {
+    if (isEditing) return;
+    DEFAULT_ITEM_DESCRIPTIONS.forEach((_, index) => {
+      setValue(`items.${index}.unit_price`, 0);
+    });
+  }, [isEditing, setValue]);
+
   async function onSubmit(values: FormValues) {
     if (values.paid && values.amount_paid == null) {
       toast.warning('OS marcada como paga sem valor pago informado.');

@@ -1,6 +1,9 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { DEFAULT_ITEM_DESCRIPTIONS } from '@/features/orders/default-items';
+import {
+  DEFAULT_ITEM_DESCRIPTIONS,
+  sortItemsForDisplay,
+} from '@/features/orders/default-items';
 import { LogoMark } from './logo-mark';
 import type {
   Client,
@@ -195,7 +198,7 @@ export function ServiceOrderPdfDocument({
               <Text style={styles.colSmall}>Preço unit.</Text>
               <Text style={styles.colSmall}>Subtotal</Text>
             </View>
-            {order.items
+            {sortItemsForDisplay(order.items)
               .filter((item) => !isUnusedDefaultItem(item))
               .map((item) => (
                 <View style={styles.tableRow} key={item.id}>

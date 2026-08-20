@@ -23,7 +23,10 @@ import { emptyToNull } from '@/lib/form-utils';
 import { formatCurrency } from '@/lib/format';
 import { useClients } from '@/features/clients/queries';
 import { ClientCombobox } from '@/features/clients/client-combobox';
-import { DEFAULT_ITEM_DESCRIPTIONS } from '@/features/orders/default-items';
+import {
+  DEFAULT_ITEM_DESCRIPTIONS,
+  sortItemsForDisplay,
+} from '@/features/orders/default-items';
 import {
   useCreateServiceOrder,
   useServiceOrder,
@@ -212,11 +215,13 @@ export function OrderEditorPage() {
       status: 'open',
       request: '',
       report: '',
-      items: DEFAULT_ITEM_DESCRIPTIONS.map((description) => ({
-        description,
-        quantity: 0,
-        unit_price: 0,
-      })),
+      items: sortItemsForDisplay(
+        DEFAULT_ITEM_DESCRIPTIONS.map((description) => ({
+          description,
+          quantity: 0,
+          unit_price: 0,
+        })),
+      ),
       trips: [],
       paid: false,
       amount_paid: null,
@@ -228,7 +233,7 @@ export function OrderEditorPage() {
 
   const {
     fields,
-    append,
+    insert: insertItem,
     remove,
     replace: replaceItems,
   } = useFieldArray({ control, name: 'items', shouldUnregister: true });
@@ -245,6 +250,22 @@ export function OrderEditorPage() {
   const [openTripIndexes, setOpenTripIndexes] = useState<Set<number>>(
     new Set(),
   );
+
+  /** Insere antes de Mão de Obra/Deslocamento, que ficam sempre por último. */
+  function handleAddItem() {
+    const items = getValues('items');
+    let index = items.length;
+    while (
+      index > 0 &&
+      DEFAULT_ITEM_DESCRIPTIONS.includes(
+        items[index - 1]
+          .description as (typeof DEFAULT_ITEM_DESCRIPTIONS)[number],
+      )
+    ) {
+      index--;
+    }
+    insertItem(index, { description: '', quantity: 1, unit_price: 0 });
+  }
 
   function handleAddTrip() {
     const newIndex = tripFields.length;
@@ -302,7 +323,7 @@ export function OrderEditorPage() {
     // visível na tela — e em StrictMode (dev) o efeito roda em dobro,
     // tornando o problema mais fácil de reproduzir. `register`-based
     // `trips` não sofre do mesmo problema, segue resetado acima.
-    replaceItems(items);
+    replaceItems(sortItemsForDisplay(items));
     setOpenTripIndexes(new Set());
   }, [order, reset, replaceItems]);
 
@@ -613,9 +634,7 @@ export function OrderEditorPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() =>
-                append({ description: '', quantity: 1, unit_price: 0 })
-              }
+              onClick={handleAddItem}
             >
               <PlusIcon />
               Adicionar item

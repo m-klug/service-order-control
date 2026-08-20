@@ -20,6 +20,7 @@ import { getErrorMessage } from '@/lib/errors';
 import { emptyToNull } from '@/lib/form-utils';
 import { formatCurrency } from '@/lib/format';
 import { useClients } from '@/features/clients/queries';
+import { DEFAULT_ITEM_DESCRIPTIONS } from '@/features/orders/default-items';
 import {
   useCreateServiceOrder,
   useServiceOrder,
@@ -203,7 +204,11 @@ export function OrderEditorPage() {
       status: 'open',
       request: '',
       report: '',
-      items: [],
+      items: DEFAULT_ITEM_DESCRIPTIONS.map((description) => ({
+        description,
+        quantity: 0,
+        unit_price: 0,
+      })),
       trips: [],
       paid: false,
       amount_paid: null,

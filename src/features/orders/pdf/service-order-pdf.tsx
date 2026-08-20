@@ -1,9 +1,23 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { DEFAULT_ITEM_DESCRIPTIONS } from '@/features/orders/default-items';
 import type {
   Client,
   ServiceOrderWithChildren,
 } from '@/lib/repositories/types';
+
+/** Item padrão (Deslocamento/Mão de Obra) não usado — some do documento entregue ao cliente. */
+function isUnusedDefaultItem(item: {
+  description: string;
+  quantity: number | string;
+}) {
+  return (
+    Number(item.quantity) === 0 &&
+    DEFAULT_ITEM_DESCRIPTIONS.includes(
+      item.description as (typeof DEFAULT_ITEM_DESCRIPTIONS)[number],
+    )
+  );
+}
 
 const statusLabels: Record<string, string> = {
   open: 'Aberta',
@@ -175,20 +189,22 @@ export function ServiceOrderPdfDocument({
               <Text style={styles.colSmall}>Preço unit.</Text>
               <Text style={styles.colSmall}>Subtotal</Text>
             </View>
-            {order.items.map((item) => (
-              <View style={styles.tableRow} key={item.id}>
-                <Text style={styles.colDescription}>{item.description}</Text>
-                <Text style={styles.colSmall}>{Number(item.quantity)}</Text>
-                <Text style={styles.colSmall}>
-                  {formatCurrency(Number(item.unit_price))}
-                </Text>
-                <Text style={styles.colSmall}>
-                  {formatCurrency(
-                    Number(item.quantity) * Number(item.unit_price),
-                  )}
-                </Text>
-              </View>
-            ))}
+            {order.items
+              .filter((item) => !isUnusedDefaultItem(item))
+              .map((item) => (
+                <View style={styles.tableRow} key={item.id}>
+                  <Text style={styles.colDescription}>{item.description}</Text>
+                  <Text style={styles.colSmall}>{Number(item.quantity)}</Text>
+                  <Text style={styles.colSmall}>
+                    {formatCurrency(Number(item.unit_price))}
+                  </Text>
+                  <Text style={styles.colSmall}>
+                    {formatCurrency(
+                      Number(item.quantity) * Number(item.unit_price),
+                    )}
+                  </Text>
+                </View>
+              ))}
           </View>
           {order.discount > 0 ? (
             <View style={styles.totalRow}>

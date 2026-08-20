@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Controller,
   useFieldArray,
   useForm,
   useWatch,
@@ -11,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { PlusIcon, Trash2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CurrencyField } from '@/components/ui/currency-field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,11 +101,6 @@ function numberOrNull(
 ): number | null {
   if (value === '' || value === null || value === undefined) return null;
   return Number(value);
-}
-
-/** Mesma lógica de `numberOrNull`, mas para campos não anuláveis (padrão 0). */
-function numberOrZero(value: string | number | null | undefined): number {
-  return numberOrNull(value) ?? 0;
 }
 
 /** Total ao vivo: Σ(qtd × preço) − desconto (RN-03), nunca negativo. */
@@ -625,14 +622,19 @@ export function OrderEditorPage() {
                       className="w-28"
                       error={errors.items?.[index]?.unit_price?.message}
                     >
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        aria-label="Preço unitário"
-                        {...register(`items.${index}.unit_price`, {
-                          valueAsNumber: true,
-                        })}
+                      <Controller
+                        control={control}
+                        name={`items.${index}.unit_price`}
+                        render={({ field }) => (
+                          <CurrencyField
+                            aria-label="Preço unitário"
+                            value={field.value}
+                            onValueChange={(value) =>
+                              field.onChange(value ?? 0)
+                            }
+                            onBlur={field.onBlur}
+                          />
+                        )}
                       />
                     </FormField>
                     <Button
@@ -672,12 +674,17 @@ export function OrderEditorPage() {
                 htmlFor="amount_paid"
                 error={errors.amount_paid?.message}
               >
-                <Input
-                  id="amount_paid"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('amount_paid', { setValueAs: numberOrNull })}
+                <Controller
+                  control={control}
+                  name="amount_paid"
+                  render={({ field }) => (
+                    <CurrencyField
+                      id="amount_paid"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
                 />
               </FormField>
               <FormField label="Data de quitação" htmlFor="settled_at">
@@ -694,12 +701,17 @@ export function OrderEditorPage() {
                 htmlFor="discount"
                 error={errors.discount?.message}
               >
-                <Input
-                  id="discount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('discount', { setValueAs: numberOrZero })}
+                <Controller
+                  control={control}
+                  name="discount"
+                  render={({ field }) => (
+                    <CurrencyField
+                      id="discount"
+                      value={field.value}
+                      onValueChange={(value) => field.onChange(value ?? 0)}
+                      onBlur={field.onBlur}
+                    />
+                  )}
                 />
               </FormField>
               <FormField label="Garantia (meses)" htmlFor="warranty_months">

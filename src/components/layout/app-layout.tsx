@@ -3,7 +3,6 @@ import { LogOutIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { Toaster } from '@/components/ui/sonner';
 import { useAuth } from '@/lib/auth-context';
 import { navItems } from './nav';
 
@@ -94,8 +93,6 @@ export function AppLayout() {
           </NavLink>
         ))}
       </nav>
-
-      <Toaster />
     </div>
   );
 }

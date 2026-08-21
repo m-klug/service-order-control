@@ -35,9 +35,8 @@ pnpm build         # type-check + build de produção (gera PWA)
 pnpm preview       # serve o build de produção
 pnpm lint          # oxlint
 pnpm format        # prettier --write
+pnpm test:e2e      # testes end-to-end (Playwright) — ver seção abaixo
 ```
-
-Ícones do PWA são placeholders gerados por `node scripts/gen-placeholder-icons.mjs` — substituir por ícones reais depois.
 
 ## Supabase
 
@@ -99,7 +98,23 @@ O cliente tipado fica em `src/lib/supabase.ts`; a app fala com ele apenas
 pela camada de repositório (T-09). Sem as chaves, funcionalidades que usam
 o Supabase lançam um erro claro pedindo para preencher o `.env`.
 
-### Banco (migrations e tipos)
+## Testes E2E (Playwright)
+
+Cobrem os 7 critérios de aceite do MVP (`specs/01-especificacao.md` §10),
+rodando contra um Supabase local de verdade (sem mocks) e o usuário
+operador único já existente (Setup, Opção A ou C acima).
+
+```bash
+pnpm exec playwright install --with-deps chromium   # uma vez só
+E2E_EMAIL=seu@email.com E2E_PASSWORD=sua-senha pnpm test:e2e
+```
+
+Pré-requisitos: Supabase local rodando e `pnpm dev` (o `webServer` do
+Playwright sobe sozinho se não estiver rodando, ou reusa se já estiver).
+Sem reset de banco entre execuções — cada teste usa nomes/campos com uma
+tag única pra não colidir com dados acumulados.
+
+## Banco (migrations e tipos)
 
 Schema versionado em `supabase/migrations/`. Depois de criar o projeto e
 vincular (`pnpm dlx supabase link --project-ref <ref>`):

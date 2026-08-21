@@ -8,6 +8,7 @@ import { queryClient } from './lib/query-client';
 import { AuthProvider } from './lib/auth-context';
 import { router } from './router';
 import { PwaUpdater } from './components/pwa-updater';
+import { Toaster } from './components/ui/sonner';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <PwaUpdater />
           <RouterProvider router={router} />
+          <Toaster />
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

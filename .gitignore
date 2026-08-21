@@ -25,6 +25,9 @@ pnpm-debug.log*
 
 # Test / coverage
 coverage/
+playwright-report/
+test-results/
+e2e/.auth/
 
 # Supabase local
 supabase/.temp/

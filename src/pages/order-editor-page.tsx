@@ -439,7 +439,7 @@ export function OrderEditorPage() {
                 htmlFor="number"
                 error={errors.number?.message}
               >
-                <Input id="number" {...register('number')} />
+                <Input id="number" autoComplete="off" {...register('number')} />
               </FormField>
               <FormField
                 label="Data de abertura"

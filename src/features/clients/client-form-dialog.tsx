@@ -21,7 +21,11 @@ import { useCreateClient, useUpdateClient } from './queries';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Informe o nome'),
-  phone: z.string().trim().optional(),
+  phone: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || /^[\d\s()+-]{8,}$/.test(v), 'Telefone inválido'),
   email: z
     .union([z.literal(''), z.string().email('E-mail inválido')])
     .optional(),
@@ -144,7 +148,11 @@ export function ClientFormDialog({
             <Input id="name" {...register('name')} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Telefone" htmlFor="phone">
+            <FormField
+              label="Telefone"
+              htmlFor="phone"
+              error={errors.phone?.message}
+            >
               <Input id="phone" {...register('phone')} />
             </FormField>
             <FormField

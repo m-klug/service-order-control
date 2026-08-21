@@ -67,7 +67,7 @@ const schema = z.object({
   status: z.enum(['open', 'in_progress', 'completed']),
   request: z.string().optional(),
   report: z.string().optional(),
-  items: z.array(itemSchema),
+  items: z.array(itemSchema).min(1, 'Adicione pelo menos um item.'),
   trips: z.array(tripSchema),
   paid: z.boolean(),
   amount_paid: z.number().nullable(),
@@ -404,12 +404,10 @@ export function OrderEditorPage() {
       }
       navigate('/ordens');
     } catch (error) {
-      const code = (error as { code?: string } | null)?.code;
       toast.error('Não foi possível salvar', {
-        description:
-          code === '23505'
-            ? 'Já existe uma OS com esse número.'
-            : getErrorMessage(error),
+        description: getErrorMessage(error, undefined, {
+          '23505': 'Já existe uma OS com esse número.',
+        }),
       });
     }
   }
@@ -645,6 +643,11 @@ export function OrderEditorPage() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
+            {errors.items?.root?.message ? (
+              <p className="text-destructive text-sm">
+                {errors.items.root.message}
+              </p>
+            ) : null}
             {fields.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 Nenhum item. Adicione mão de obra, deslocamento, peças, etc.

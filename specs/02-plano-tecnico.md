@@ -68,6 +68,7 @@ Princípio-chave: **a UI e os casos de uso não conhecem o Supabase**. Falam com
 - **Fase 3 — Saída e Busca**: geração de PDF da OS; listagem/filtros/busca.
 - **Fase 4 — Usabilidade**: zebra nas tabelas; itens padrão ("Deslocamento" e "Mão de Obra") na OS nova; entrada monetária em pt-BR (`R$` + vírgula); valor pago pré-preenchido e selo "pago a menor"; cliente por busca com criação na hora (fecha a RF-02).
 - **Fase 5 — Polimento**: PWA instalável, validações, testes dos critérios de aceite.
+- **Fase 6 — Identidade Visual**: logo real da Beto Sistemas (espiral + "B") substituindo os placeholders genéricos — vetor nativo no PDF, ícones do PWA, favicon. Detalhes em `specs/10-plano-fase-6-identidade-visual.md`. Entregue fora de ordem, depois da Fase 5.
 
 Cada fase entrega algo utilizável e verificável contra os critérios de aceite do MVP.
 
